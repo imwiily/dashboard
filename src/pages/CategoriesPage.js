@@ -1,6 +1,6 @@
 /**
- * Página de Categorias
- * Página completa de gerenciamento de categorias
+ * Página de Categorias - ATUALIZADA
+ * Página completa de gerenciamento de categorias com tipos de imagem
  */
 
 import React, { useState } from 'react';
@@ -25,7 +25,8 @@ import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
 import { useCategories } from '../hooks/useCategories';
-import { getImageUrl } from '../utils/config';
+import { getMidDisplayUrl, getDisplayUrl } from '../utils/config'; // NOVO: Importar funções de imagem
+import { IMAGE_CONTEXTS } from '../utils/constants'; // NOVO: Importar contextos
 import { 
   STATUS_FILTERS, 
   TOAST_TYPES, 
@@ -84,7 +85,7 @@ const CategoryFilters = ({
   </div>
 );
 
-// Componente de linha da tabela
+// Componente de linha da tabela - ATUALIZADO COM TIPOS DE IMAGEM
 const CategoryTableRow = ({ category, onEdit, onDelete }) => {
   const categoryName = category?.nome || category?.name || 'Sem nome';
   const isActive = category?.ativo !== false;
@@ -97,7 +98,7 @@ const CategoryTableRow = ({ category, onEdit, onDelete }) => {
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
             {category.imageUrl ? (
               <img 
-                src={getImageUrl(category.imageUrl)} 
+                src={getMidDisplayUrl(category.imageUrl)} // NOVO: Usando MID-DISPLAY para tabelas
                 alt={categoryName}
                 className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
@@ -147,7 +148,7 @@ const CategoryTableRow = ({ category, onEdit, onDelete }) => {
   );
 };
 
-// Modal de categoria
+// Modal de categoria - ATUALIZADO COM TIPOS DE IMAGEM
 const CategoryModal = ({ 
   isOpen, 
   onClose, 
@@ -301,7 +302,7 @@ const CategoryModal = ({
             </select>
           </div>
 
-          {/* Seção de Imagem */}
+          {/* Seção de Imagem - ATUALIZADA COM TIPOS */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Imagem da Categoria
@@ -312,7 +313,7 @@ const CategoryModal = ({
                 <p className="text-sm text-gray-600 mb-2">Imagem atual:</p>
                 <div className="flex items-center justify-center w-32 h-32 bg-gray-100 rounded-lg border-2 border-gray-200">
                   <img 
-                    src={getImageUrl(category.imageUrl)} 
+                    src={getDisplayUrl(category.imageUrl)} // NOVO: Usando DISPLAY para visualização completa
                     alt={formData.nome}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {

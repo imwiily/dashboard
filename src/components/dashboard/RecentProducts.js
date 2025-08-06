@@ -1,6 +1,6 @@
 /**
- * Componente RecentProducts
- * Lista dos produtos mais recentes para o dashboard
+ * Componente RecentProducts - ATUALIZADO
+ * Lista dos produtos mais recentes para o dashboard com tipos de imagem
  */
 
 import React from 'react';
@@ -8,11 +8,11 @@ import { useNavigate } from 'react-router-dom';
 import { Package, ArrowRight, Plus, Eye, Tag, DollarSign } from 'lucide-react';
 import { useRecentProducts } from '../../hooks/useProducts';
 import { RecentCategoriesListSkeleton } from '../common/LoadingSkeleton';
-import { getImageUrl } from '../../utils/config';
+import { getMidDisplayUrl, getIconUrl } from '../../utils/config'; // NOVO: Importar funções de imagem
 import { ROUTES, CSS_CLASSES } from '../../utils/constants';
 import { formatCurrency } from '../../utils/helpers';
 
-// Componente individual de produto recente
+// Componente individual de produto recente - ATUALIZADO COM TIPOS DE IMAGEM
 const RecentProductItem = ({ product, onClick, getCategoryById }) => {
   const productName = product?.nome || product?.name || 'Sem nome';
   const isActive = product?.ativo !== false && product?.active !== false;
@@ -28,7 +28,7 @@ const RecentProductItem = ({ product, onClick, getCategoryById }) => {
         <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
           {product.imageUrl || product.imageURL ? (
             <img 
-              src={getImageUrl(product.imageUrl || product.imageURL)} 
+              src={getMidDisplayUrl(product.imageUrl || product.imageURL)} // NOVO: Usando MID-DISPLAY para cards
               alt={productName}
               className="w-full h-full object-cover rounded-lg"
               onError={(e) => {
@@ -205,7 +205,7 @@ const RecentProducts = ({
   );
 };
 
-// Componente compacto para sidebar ou outras áreas
+// Componente compacto para sidebar ou outras áreas - ATUALIZADO COM TIPOS DE IMAGEM
 export const CompactRecentProducts = ({ 
   limit = 3, 
   onProductClick,
@@ -254,7 +254,7 @@ export const CompactRecentProducts = ({
             <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
               {product.imageUrl ? (
                 <img 
-                  src={getImageUrl(product.imageUrl)} 
+                  src={getIconUrl(product.imageUrl)} // NOVO: Usando ICON para sidebar
                   alt={product?.nome || product?.name}
                   className="w-full h-full object-cover rounded-lg"
                   onError={(e) => {
@@ -293,7 +293,7 @@ export const CompactRecentProducts = ({
   );
 };
 
-// Componente de produtos por categoria
+// Componente de produtos por categoria - ATUALIZADO COM TIPOS DE IMAGEM
 export const ProductsByCategory = ({ 
   categoryId, 
   categoryName,
@@ -362,9 +362,22 @@ export const ProductsByCategory = ({
               onClick={() => onProductClick?.(product)}
               className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer"
             >
-              <span className="text-sm text-gray-700 truncate">
-                {product.nome || product.name}
-              </span>
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded flex items-center justify-center">
+                  {product.imageUrl ? (
+                    <img 
+                      src={getIconUrl(product.imageUrl)} // NOVO: Usando ICON para mini-cards
+                      alt={product.nome || product.name}
+                      className="w-full h-full object-cover rounded"
+                    />
+                  ) : (
+                    <Package className="w-3 h-3 text-white" />
+                  )}
+                </div>
+                <span className="text-sm text-gray-700 truncate">
+                  {product.nome || product.name}
+                </span>
+              </div>
               <span className="text-sm font-semibold text-green-600 ml-2">
                 {formatCurrency(product.preco || product.price || 0)}
               </span>

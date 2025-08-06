@@ -1,6 +1,8 @@
 /**
  * Constantes do Sistema
  * Valores fixos utilizados em toda a aplicação
+ * 
+ * NOVO: Constantes para tipos de imagem
  */
 
 // Tipos de toast/notificação
@@ -27,6 +29,33 @@ export const STATUS_FILTERS = {
   ALL: 'all',
   ACTIVE: 'active',
   INACTIVE: 'inactive'
+};
+
+// NOVO: Tipos de imagem para otimização
+export const IMAGE_TYPES = {
+  ICON: 'ICON',           // Ícones pequenos (16x16, 24x24, 32x32)
+  MID_DISPLAY: 'MID-DISPLAY', // Resolução média (64x64, 128x128, 256x256)
+  DISPLAY: 'DISPLAY'      // Alta resolução (512x512+, original)
+};
+
+// NOVO: Contextos de uso de imagem (para facilitar escolha do tipo)
+export const IMAGE_CONTEXTS = {
+  // Ícones pequenos
+  SIDEBAR_ICON: IMAGE_TYPES.ICON,
+  BREADCRUMB_ICON: IMAGE_TYPES.ICON,
+  BUTTON_ICON: IMAGE_TYPES.ICON,
+  
+  // Resolução média
+  TABLE_THUMBNAIL: IMAGE_TYPES.MID_DISPLAY,
+  CARD_IMAGE: IMAGE_TYPES.MID_DISPLAY,
+  LIST_ITEM: IMAGE_TYPES.MID_DISPLAY,
+  AVATAR: IMAGE_TYPES.MID_DISPLAY,
+  
+  // Alta resolução
+  MODAL_IMAGE: IMAGE_TYPES.DISPLAY,
+  GALLERY: IMAGE_TYPES.DISPLAY,
+  DETAIL_VIEW: IMAGE_TYPES.DISPLAY,
+  PREVIEW: IMAGE_TYPES.DISPLAY
 };
 
 // Views/páginas disponíveis

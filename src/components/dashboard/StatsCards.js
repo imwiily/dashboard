@@ -1,6 +1,6 @@
 /**
- * Componente StatsCards
- * Cards de estatísticas para o dashboard
+ * Componente StatsCards - CORRIGIDO
+ * Cards de estatísticas para categorias no dashboard
  */
 
 import React from 'react';
@@ -59,46 +59,46 @@ const StatCard = ({ config, value, loading = false }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl p-6 border border-gray-200">
+      <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200">
         <div className="flex items-center justify-between">
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-            <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+          <div className="space-y-3 flex-1">
+            <div className="h-3 sm:h-4 bg-gray-200 rounded w-20 sm:w-24 animate-pulse"></div>
+            <div className="h-6 sm:h-8 bg-gray-200 rounded w-12 sm:w-16 animate-pulse"></div>
           </div>
-          <div className={`w-12 h-12 ${config.bgColor} rounded-lg animate-pulse`}></div>
+          <div className={`w-8 h-8 sm:w-12 sm:h-12 ${config.bgColor} rounded-lg animate-pulse`}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
+    <div className="bg-white rounded-xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-shadow">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{config.title}</p>
-          <p className={`text-3xl font-bold ${textColor}`}>{formattedValue}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{config.title}</p>
+          <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textColor} mt-1`}>
+            <span className="block truncate">{formattedValue}</span>
+          </p>
         </div>
-        <div className={`w-12 h-12 ${config.bgColor} rounded-lg flex items-center justify-center`}>
-          <IconComponent className={`w-6 h-6 ${config.iconColor}`} />
+        <div className={`w-8 h-8 sm:w-12 sm:h-12 ${config.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 ml-3`}>
+          <IconComponent className={`w-4 h-4 sm:w-6 sm:h-6 ${config.iconColor}`} />
         </div>
       </div>
     </div>
   );
 };
 
-// Componente principal dos cards de estatísticas
+// Componente principal dos cards de estatísticas - CORRIGIDO
 const StatsCards = ({ className = '' }) => {
   const { stats, loading, hasData } = useCategoryStats();
 
   // Se não há dados e não está carregando, mostrar estado vazio
   if (!loading && !hasData) {
     return (
-      <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className}`}>
-        <div className="col-span-full bg-white rounded-xl p-8 border border-gray-200 text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum Dado Disponível</h3>
-          <p className="text-gray-500">Crie sua primeira categoria para ver as estatísticas aqui.</p>
-        </div>
+      <div className="col-span-full bg-white rounded-xl p-6 sm:p-8 border border-gray-200 text-center">
+        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum Dado Disponível</h3>
+        <p className="text-gray-500">Crie sua primeira categoria para ver as estatísticas aqui.</p>
       </div>
     );
   }
@@ -106,14 +106,21 @@ const StatsCards = ({ className = '' }) => {
   // Se está carregando, mostrar skeleton
   if (loading) {
     return (
-      <div className={className}>
-        <StatsGridSkeleton cards={4} />
-      </div>
+      <>
+        {statsConfig.map((config) => (
+          <StatCard
+            key={config.id}
+            config={config}
+            value={0}
+            loading={true}
+          />
+        ))}
+      </>
     );
   }
 
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 ${className}`}>
+    <>
       {statsConfig.map((config) => (
         <StatCard
           key={config.id}
@@ -122,7 +129,7 @@ const StatsCards = ({ className = '' }) => {
           loading={loading}
         />
       ))}
-    </div>
+    </>
   );
 };
 
@@ -140,27 +147,29 @@ export const SingleStatCard = ({
 }) => {
   if (loading) {
     return (
-      <div className={`bg-white rounded-xl p-6 border border-gray-200 ${className}`}>
+      <div className={`bg-white rounded-xl p-4 sm:p-6 border border-gray-200 ${className}`}>
         <div className="flex items-center justify-between">
-          <div className="space-y-3">
-            <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-            <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+          <div className="space-y-3 flex-1">
+            <div className="h-3 sm:h-4 bg-gray-200 rounded w-20 sm:w-24 animate-pulse"></div>
+            <div className="h-6 sm:h-8 bg-gray-200 rounded w-12 sm:w-16 animate-pulse"></div>
           </div>
-          <div className={`w-12 h-12 ${bgColor} rounded-lg animate-pulse`}></div>
+          <div className={`w-8 h-8 sm:w-12 sm:h-12 ${bgColor} rounded-lg animate-pulse`}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg transition-shadow ${className}`}>
+    <div className={`bg-white rounded-xl p-4 sm:p-6 border border-gray-200 hover:shadow-lg transition-shadow ${className}`}>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className={`text-3xl font-bold ${textColor}`}>{formatter(value)}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{title}</p>
+          <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textColor} mt-1`}>
+            <span className="block truncate">{formatter(value)}</span>
+          </p>
         </div>
-        <div className={`w-12 h-12 ${bgColor} rounded-lg flex items-center justify-center`}>
-          <IconComponent className={`w-6 h-6 ${iconColor}`} />
+        <div className={`w-8 h-8 sm:w-12 sm:h-12 ${bgColor} rounded-lg flex items-center justify-center flex-shrink-0 ml-3`}>
+          <IconComponent className={`w-4 h-4 sm:w-6 sm:h-6 ${iconColor}`} />
         </div>
       </div>
     </div>
@@ -189,9 +198,9 @@ export const MiniStatCard = ({
       <div className="flex-shrink-0">
         <IconComponent className={`w-5 h-5 ${colors.icon}`} />
       </div>
-      <div>
-        <p className="text-xs font-medium text-gray-600">{title}</p>
-        <p className={`text-lg font-bold ${colors.text}`}>{value}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium text-gray-600 truncate">{title}</p>
+        <p className={`text-lg font-bold ${colors.text} truncate`}>{value}</p>
       </div>
     </div>
   );
@@ -224,6 +233,15 @@ export const useStatsCards = () => {
     inactiveCategories: stats.inactive || 0,
     activationRate: stats.activePercentage || 0
   };
+};
+
+// Componente com grid próprio (para compatibilidade)
+export const StatsCardsWithGrid = ({ className = '' }) => {
+  return (
+    <div className={`grid grid-cols-2 lg:grid-cols-4 gap-4 ${className}`}>
+      <StatsCards />
+    </div>
+  );
 };
 
 export default StatsCards;

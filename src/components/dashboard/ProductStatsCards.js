@@ -1,5 +1,5 @@
 /**
- * Componente ProductStatsCards
+ * Componente ProductStatsCards - CORRIGIDO
  * Cards de estatísticas para produtos no dashboard
  */
 
@@ -77,7 +77,9 @@ const ProductStatCard = ({ config, value, loading = false }) => {
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
           <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{config.title}</p>
-          <p className={`text-xl sm:text-3xl font-bold ${textColor} mt-1 truncate`}>{formattedValue}</p>
+          <p className={`text-xl sm:text-2xl lg:text-3xl font-bold ${textColor} mt-1`}>
+            <span className="block truncate">{formattedValue}</span>
+          </p>
         </div>
         <div className={`w-8 h-8 sm:w-12 sm:h-12 ${config.bgColor} rounded-lg flex items-center justify-center flex-shrink-0 ml-3`}>
           <IconComponent className={`w-4 h-4 sm:w-6 sm:h-6 ${config.iconColor}`} />
@@ -94,13 +96,11 @@ const ProductStatsCards = ({ className = '' }) => {
   // Se não há dados e não está carregando, mostrar estado vazio
   if (!loading && !hasData) {
     return (
-      <>
-        <div className="col-span-full bg-white rounded-xl p-8 border border-gray-200 text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum Produto Cadastrado</h3>
-          <p className="text-gray-500">Adicione seu primeiro produto para ver as estatísticas aqui.</p>
-        </div>
-      </>
+      <div className="col-span-full bg-white rounded-xl p-6 sm:p-8 border border-gray-200 text-center">
+        <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Nenhum Produto Cadastrado</h3>
+        <p className="text-gray-500">Adicione seu primeiro produto para ver as estatísticas aqui.</p>
+      </div>
     );
   }
 
@@ -250,7 +250,7 @@ export const MiniProductStats = ({ className = '' }) => {
         </div>
         <div>
           <p className="text-xs font-medium text-gray-600">Valor Total</p>
-          <p className="text-lg font-bold text-emerald-600">{formatCurrency(stats.totalValue)}</p>
+          <p className="text-sm font-bold text-emerald-600 truncate">{formatCurrency(stats.totalValue)}</p>
         </div>
       </div>
     </div>

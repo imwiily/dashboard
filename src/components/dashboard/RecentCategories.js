@@ -1,6 +1,6 @@
 /**
- * Componente RecentCategories
- * Lista das categorias mais recentes para o dashboard
+ * Componente RecentCategories - ATUALIZADO
+ * Lista das categorias mais recentes para o dashboard com tipos de imagem
  */
 
 import React from 'react';
@@ -8,10 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import { Tag, ArrowRight, Plus, Eye } from 'lucide-react';
 import { useCategoriesList } from '../../hooks/useCategories';
 import { RecentCategoriesListSkeleton } from '../common/LoadingSkeleton';
-import { getImageUrl } from '../../utils/config';
+import { getMidDisplayUrl, getIconUrl } from '../../utils/config'; // NOVO: Importar funções de imagem
 import { ROUTES, CSS_CLASSES } from '../../utils/constants';
 
-// Componente individual de categoria recente
+// Componente individual de categoria recente - ATUALIZADO COM TIPOS DE IMAGEM
 const RecentCategoryItem = ({ category, onClick }) => {
   const categoryName = category?.nome || category?.name || 'Sem nome';
   const isActive = category?.ativo !== false;
@@ -23,7 +23,7 @@ const RecentCategoryItem = ({ category, onClick }) => {
         <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
           {category.imageUrl ? (
             <img 
-              src={getImageUrl(category.imageUrl)} 
+              src={getMidDisplayUrl(category.imageUrl)} // NOVO: Usando MID-DISPLAY para cards
               alt={categoryName}
               className="w-full h-full object-cover rounded-lg"
               onError={(e) => {
@@ -183,7 +183,7 @@ const RecentCategories = ({
   );
 };
 
-// Componente compacto para sidebar ou outras áreas
+// Componente compacto para sidebar ou outras áreas - ATUALIZADO COM TIPOS DE IMAGEM
 export const CompactRecentCategories = ({ 
   limit = 3, 
   onCategoryClick,
@@ -226,7 +226,21 @@ export const CompactRecentCategories = ({
           className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
         >
           <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Tag className="w-4 h-4 text-white" />
+            {category.imageUrl ? (
+              <img 
+                src={getIconUrl(category.imageUrl)} // NOVO: Usando ICON para sidebar
+                alt={category?.nome || category?.name}
+                className="w-full h-full object-cover rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <Tag 
+              className="w-4 h-4 text-white" 
+              style={{ display: category.imageUrl ? 'none' : 'block' }}
+            />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-gray-900 text-sm truncate">

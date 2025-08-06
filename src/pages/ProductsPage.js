@@ -1,6 +1,6 @@
 /**
- * Página de Produtos
- * Página completa de gerenciamento de produtos
+ * Página de Produtos - ATUALIZADA
+ * Página completa de gerenciamento de produtos com tipos de imagem
  */
 
 import React, { useState } from 'react';
@@ -26,7 +26,7 @@ import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
 import { useProducts } from '../hooks/useProducts';
-import { getImageUrl } from '../utils/config';
+import { getMidDisplayUrl, getDisplayUrl } from '../utils/config'; // NOVO: Importar funções de imagem
 import { 
   STATUS_FILTERS, 
   TOAST_TYPES, 
@@ -105,7 +105,7 @@ const ProductFilters = ({
   </div>
 );
 
-// Componente de linha da tabela
+// Componente de linha da tabela - ATUALIZADO COM TIPOS DE IMAGEM
 const ProductTableRow = ({ product, onEdit, onDelete }) => {
   const productName = product?.nome || product?.name || 'Sem nome';
   const isActive = product?.ativo !== false;
@@ -124,7 +124,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
             {product.imageUrl || product.imageURL ? (
               <img 
-                src={getImageUrl(product.imageUrl || product.imageURL)} 
+                src={getMidDisplayUrl(product.imageUrl || product.imageURL)} // NOVO: Usando MID-DISPLAY para tabelas
                 alt={productName}
                 className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
@@ -213,7 +213,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
   );
 };
 
-// Modal de produto
+// Modal de produto - ATUALIZADO COM TIPOS DE IMAGEM
 const ProductModal = ({ 
   isOpen, 
   onClose, 
@@ -627,7 +627,7 @@ const ProductModal = ({
             </div>
           </div>
 
-          {/* Seção de Imagem */}
+          {/* Seção de Imagem - ATUALIZADA COM TIPOS */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Imagem do Produto
@@ -638,7 +638,7 @@ const ProductModal = ({
                 <p className="text-sm text-gray-600 mb-2">Imagem atual:</p>
                 <div className="flex items-center justify-center w-32 h-32 bg-gray-100 rounded-lg border-2 border-gray-200">
                   <img 
-                    src={getImageUrl(product.imageUrl || product.imageURL)} 
+                    src={getDisplayUrl(product.imageUrl || product.imageURL)} // NOVO: Usando DISPLAY para visualização completa
                     alt={formData.nome}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {
