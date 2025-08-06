@@ -9,18 +9,15 @@ import Sidebar, { useSidebar } from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import StatsCards from '../components/dashboard/StatsCards';
 import RecentCategories from '../components/dashboard/RecentCategories';
-import Toast from '../components/common/Toast';
 import SystemStatus from '../components/common/SystemStatus';
 import { AuthLayout } from '../components/common/ProtectedRoute';
 import { DashboardPageSkeleton } from '../components/common/LoadingSkeleton';
-import { useToast } from '../hooks/useToast';
 import { useCategories } from '../hooks/useCategories';
 import { ROUTES } from '../utils/constants';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const sidebar = useSidebar();
-  const toast = useToast();
   const { loading: categoriesLoading } = useCategories();
 
   // Handlers
@@ -67,9 +64,6 @@ const DashboardPage = () => {
             onMenuClick={sidebar.open}
             onCreateClick={handleCreateCategory}
           />
-
-          {/* Toast Container */}
-          <Toast toasts={toast.toasts} onRemove={toast.removeToast} />
 
           {/* Content */}
           <main className="flex-1 px-4 py-6 lg:px-8">

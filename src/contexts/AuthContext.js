@@ -205,7 +205,13 @@ export const AuthProvider = ({ children }) => {
      * Verificar se está autenticado
      */
     isAuthenticated() {
-      return state.isAuthenticated && authService_local.isAuthenticated();
+      const currentAuthState = state.isAuthenticated && authService_local.isAuthenticated();
+      console.log('🔍 AuthContext.isAuthenticated() chamado:', {
+        stateAuthenticated: state.isAuthenticated,
+        serviceAuthenticated: authService_local.isAuthenticated(),
+        result: currentAuthState
+      });
+      return currentAuthState;
     },
 
     /**
@@ -231,6 +237,7 @@ export const AuthProvider = ({ children }) => {
     // Estados específicos
     isLoading: state.isLoading,
     isLoggedIn: state.isAuthenticated,
+    isAuthenticated: state.isAuthenticated, // Usar diretamente do state
     
     // Helpers
     authState: state.state

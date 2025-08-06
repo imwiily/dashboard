@@ -1,6 +1,6 @@
 /**
  * Configurações Centralizadas do Dashboard
- * Versão: 2.4.04
+ * Versão: 2.4.08
  * Última atualização: 05/08/2025
  */
 
@@ -12,7 +12,7 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.4.04',
+    version: '2.4.08',
     name: 'Dashboard de Gestão de Categorias',
     releaseDate: '05/08/2025',
     build: Date.now() // Timestamp do build
@@ -22,6 +22,7 @@ export const config = {
   },
   endpoints: {
     login: '/login',
+    health: '/health',
     categories: {
       list: '/categorias',
       create: '/categorias', 

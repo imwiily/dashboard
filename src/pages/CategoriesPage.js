@@ -21,12 +21,10 @@ import {
 } from 'lucide-react';
 import Sidebar, { useSidebar } from '../components/common/Sidebar';
 import Header from '../components/common/Header';
-import Toast from '../components/common/Toast';
 import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
 import { useCategories } from '../hooks/useCategories';
-import { useToast } from '../hooks/useToast';
 import { getImageUrl } from '../utils/config';
 import { 
   STATUS_FILTERS, 
@@ -462,7 +460,6 @@ const DeleteModal = ({ isOpen, category, onConfirm, onCancel, loading = false })
 // Página principal de categorias
 const CategoriesPage = () => {
   const sidebar = useSidebar();
-  const toast = useToast();
   const {
     filteredCategories,
     loading,
@@ -537,9 +534,6 @@ const CategoriesPage = () => {
             onMenuClick={sidebar.open}
             onCreateClick={handleCreate}
           />
-
-          {/* Toast Container */}
-          <Toast toasts={toast.toasts} onRemove={toast.removeToast} />
 
           {/* Content */}
           <main className="flex-1 px-4 py-6 lg:px-8">

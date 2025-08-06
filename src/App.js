@@ -6,6 +6,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import ToastProvider from './components/common/ToastProvider';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CategoriesPage from './pages/CategoriesPage';
@@ -51,9 +52,9 @@ const NotFoundPage = () => (
 
 // Componente de rota inteligente que aguarda o AuthContext
 const SmartRoute = ({ children }) => {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated: authStatus } = useAuth();
   
-  console.log('🔍 SmartRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
+  console.log('🔍 SmartRoute - isLoading:', isLoading, 'isAuthenticated:', authStatus);
   
   // Se ainda está carregando, mostrar loading
   if (isLoading) {
@@ -71,8 +72,8 @@ const SmartRoute = ({ children }) => {
   }
   
   // Se não autenticado, ir para login
-  if (!isAuthenticated) {
-    console.log('🔐 SmartRoute: Redirecionando para login');
+  if (!authStatus) {
+    console.log('🔐 SmartRoute: Não autenticado, redirecionando para login');
     return <Navigate to={ROUTES.LOGIN} replace />;
   }
   
@@ -88,54 +89,56 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            {/* Rota de login - acessível apenas quando NÃO autenticado */}
-            <Route 
-              path={ROUTES.LOGIN} 
-              element={<LoginPage />}
-            />
+      <ToastProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              {/* Rota de login - acessível apenas quando NÃO autenticado */}
+              <Route 
+                path={ROUTES.LOGIN} 
+                element={<LoginPage />}
+              />
 
-            {/* Rota raiz - redireciona inteligentemente */}
-            <Route 
-              path={ROUTES.ROOT} 
-              element={<SmartRoute><Navigate to={ROUTES.DASHBOARD} replace /></SmartRoute>} 
-            />
+              {/* Rota raiz - redireciona inteligentemente */}
+              <Route 
+                path={ROUTES.ROOT} 
+                element={<SmartRoute><Navigate to={ROUTES.DASHBOARD} replace /></SmartRoute>} 
+              />
 
-            {/* Rotas protegidas - só acessíveis se autenticado */}
-            <Route 
-              path={ROUTES.DASHBOARD} 
-              element={
-                <SmartRoute>
-                  <DashboardPage />
-                </SmartRoute>
-              } 
-            />
+              {/* Rotas protegidas - só acessíveis se autenticado */}
+              <Route 
+                path={ROUTES.DASHBOARD} 
+                element={
+                  <SmartRoute>
+                    <DashboardPage />
+                  </SmartRoute>
+                } 
+              />
 
-            <Route 
-              path={ROUTES.CATEGORIES} 
-              element={
-                <SmartRoute>
-                  <CategoriesPage />
-                </SmartRoute>
-              } 
-            />
+              <Route 
+                path={ROUTES.CATEGORIES} 
+                element={
+                  <SmartRoute>
+                    <CategoriesPage />
+                  </SmartRoute>
+                } 
+              />
 
-            <Route 
-              path={ROUTES.SETTINGS} 
-              element={
-                <SmartRoute>
-                  <SettingsPage />
-                </SmartRoute>
-              } 
-            />
+              <Route 
+                path={ROUTES.SETTINGS} 
+                element={
+                  <SmartRoute>
+                    <SettingsPage />
+                  </SmartRoute>
+                } 
+              />
 
-            {/* Rota 404 - deve ser a última */}
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </div>
-      </Router>
+              {/* Rota 404 - deve ser a última */}
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </div>
+        </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

@@ -10,48 +10,75 @@ import { useAuth } from '../../contexts/AuthContext';
 const SystemStatus = ({ className = '' }) => {
   const [systemStatus, setSystemStatus] = useState({
     isOnline: true,
-    apiConnected: false,
-    lastCheck: null
+    apiConnected: null, // null = não verificado ainda, true/false = resultado
+    lastCheck: null,
+    healthData: null
   });
 
   const { isAuthenticated } = useAuth();
 
   // Verificar status da API usando endpoint health
   const checkApiStatus = async () => {
+    console.log('🏥 Verificando status da API...');
+    
     try {
-      // Primeiro tentar endpoint health dedicado
-      const healthResponse = await fetch(`${config.api.baseUrl}/health`, {
+      // Usar endpoint health na estrutura correta /api/v1/health
+      const healthResponse = await fetch(`${config.api.baseUrl}/api/${config.api.version}/health`, {
         method: 'GET',
-        timeout: 5000
+        headers: {
+          'Accept': 'application/json',
+        }
       });
+      
+      console.log('🏥 Health response status:', healthResponse.status);
       
       if (healthResponse.ok) {
         const healthData = await healthResponse.json();
+        console.log('🏥 Health check response:', healthData);
+        
+        const isUp = healthData.status === 'UP';
+        console.log('🏥 API Status:', isUp ? 'UP' : 'DOWN');
+        
         setSystemStatus(prev => ({
           ...prev,
-          apiConnected: healthData.status === 'UP',
+          apiConnected: isUp,
           lastCheck: new Date(),
-          healthData: healthData // Armazenar dados do health check
+          healthData: healthData
+        }));
+        return;
+      } else {
+        console.log('⚠️ Health endpoint retornou erro:', healthResponse.status);
+        // Se health endpoint existe mas retorna erro, API tem problema
+        setSystemStatus(prev => ({
+          ...prev,
+          apiConnected: false,
+          lastCheck: new Date()
         }));
         return;
       }
     } catch (healthError) {
-      console.log('Health endpoint não disponível, testando endpoint de categorias...');
+      console.log('⚠️ Health endpoint não disponível:', healthError.message);
     }
 
     // Fallback: testar endpoint de categorias
     try {
+      console.log('🔄 Testando endpoint de categorias como fallback...');
       const response = await fetch(`${config.api.baseUrl}/api/${config.api.version}/categorias`, {
-        method: 'GET',
-        timeout: 5000
+        method: 'GET'
       });
+      
+      console.log('🔄 Categorias response status:', response.status);
+      
+      const isConnected = response.ok || response.status === 401; // 401 = API funciona mas não autorizado
+      console.log('🔄 API Status (fallback):', isConnected ? 'CONNECTED' : 'OFFLINE');
       
       setSystemStatus(prev => ({
         ...prev,
-        apiConnected: response.ok || response.status === 401,
+        apiConnected: isConnected,
         lastCheck: new Date()
       }));
     } catch (error) {
+      console.log('❌ Endpoint de categorias também falhou:', error.message);
       setSystemStatus(prev => ({
         ...prev,
         apiConnected: false,
@@ -84,19 +111,19 @@ const SystemStatus = ({ className = '' }) => {
 
   // Status da API
   const getApiStatus = () => {
-    if (!systemStatus.lastCheck) return 'verificando';
+    if (systemStatus.apiConnected === null) return 'verificando';
     return systemStatus.apiConnected ? 'conectada' : 'offline';
   };
 
   // Status visual da API
   const getApiStatusColor = () => {
-    if (!systemStatus.lastCheck) return 'text-yellow-500';
+    if (systemStatus.apiConnected === null) return 'text-yellow-500';
     return systemStatus.apiConnected ? 'text-green-500' : 'text-red-500';
   };
 
   // Status do sistema
   const getSystemStatusText = () => {
-    if (!systemStatus.lastCheck) {
+    if (systemStatus.apiConnected === null) {
       return 'Sistema inicializando';
     }
     return systemStatus.apiConnected 
@@ -104,14 +131,18 @@ const SystemStatus = ({ className = '' }) => {
       : 'Sistema funcionando (API offline)';
   };
 
+  // Indicador visual
+  const getIndicatorColor = () => {
+    if (systemStatus.apiConnected === null) return 'bg-yellow-500';
+    return systemStatus.apiConnected ? 'bg-green-500' : 'bg-red-500';
+  };
+
   return (
     <div className={`bg-white rounded-xl border border-gray-200 p-6 text-center ${className}`}>
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-gray-500">
         {/* Status do Sistema */}
         <div className="flex items-center gap-2">
-          <div className={`w-2 h-2 rounded-full ${
-            systemStatus.apiConnected ? 'bg-green-500' : 'bg-yellow-500'
-          } animate-pulse`}></div>
+          <div className={`w-2 h-2 rounded-full ${getIndicatorColor()} animate-pulse`}></div>
           <span>{getSystemStatusText()}</span>
         </div>
 

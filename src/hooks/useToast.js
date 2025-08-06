@@ -6,10 +6,34 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { TOAST_TYPES, UI_CONFIG } from '../utils/constants';
 
+// Toast global singleton
+let globalToastState = {
+  toasts: [],
+  listeners: []
+};
+
 // Hook para gerenciar toasts
 export const useToast = () => {
-  const [toasts, setToasts] = useState([]);
+  const [toasts, setToasts] = useState(globalToastState.toasts);
   const toastIdRef = useRef(0);
+
+  // Sincronizar com estado global
+  useEffect(() => {
+    const listener = (newToasts) => {
+      setToasts([...newToasts]);
+    };
+    
+    globalToastState.listeners.push(listener);
+    
+    return () => {
+      globalToastState.listeners = globalToastState.listeners.filter(l => l !== listener);
+    };
+  }, []);
+
+  // Notificar todos os listeners
+  const notifyListeners = () => {
+    globalToastState.listeners.forEach(listener => listener(globalToastState.toasts));
+  };
 
   // Gerar ID único para toast
   const generateId = useCallback(() => {
@@ -31,7 +55,8 @@ export const useToast = () => {
 
     console.log('📢 Novo toast:', newToast);
 
-    setToasts(prevToasts => [...prevToasts, newToast]);
+    globalToastState.toasts.push(newToast);
+    notifyListeners();
 
     // Auto-remover após duração especificada
     if (duration > 0) {
@@ -46,13 +71,15 @@ export const useToast = () => {
   // Remover toast específico
   const removeToast = useCallback((id) => {
     console.log('🗑️ Removendo toast:', id);
-    setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
+    globalToastState.toasts = globalToastState.toasts.filter(toast => toast.id !== id);
+    notifyListeners();
   }, []);
 
   // Limpar todos os toasts
   const clearAllToasts = useCallback(() => {
     console.log('🧹 Limpando todos os toasts');
-    setToasts([]);
+    globalToastState.toasts = [];
+    notifyListeners();
   }, []);
 
   // Funções específicas para cada tipo
@@ -71,21 +98,6 @@ export const useToast = () => {
   const showWarning = useCallback((message, duration) => {
     return addToast(message, TOAST_TYPES.WARNING, duration);
   }, [addToast]);
-
-  // Limpar toasts expirados automaticamente
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      setToasts(prevToasts => 
-        prevToasts.filter(toast => {
-          if (toast.duration <= 0) return true; // Toasts permanentes
-          return (now - toast.createdAt) < toast.duration;
-        })
-      );
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   return {
     // Estado
