@@ -10,6 +10,7 @@ import ToastProvider from './components/common/ToastProvider';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import CategoriesPage from './pages/CategoriesPage';
+import ProductsPage from './pages/ProductsPage';
 import { ROUTES } from './utils/constants';
 
 // Página de configurações (placeholder)
@@ -120,6 +121,15 @@ function App() {
                 element={
                   <SmartRoute>
                     <CategoriesPage />
+                  </SmartRoute>
+                } 
+              />
+
+              <Route 
+                path={ROUTES.PRODUCTS} 
+                element={
+                  <SmartRoute>
+                    <ProductsPage />
                   </SmartRoute>
                 } 
               />

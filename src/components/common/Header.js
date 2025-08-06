@@ -22,6 +22,12 @@ const pageConfig = {
     showCreateButton: true,
     createLabel: 'Nova Categoria'
   },
+  [ROUTES.PRODUCTS]: {
+    title: 'Gerenciar Produtos',
+    subtitle: 'Gerencie seu catálogo de produtos',
+    showCreateButton: true,
+    createLabel: 'Novo Produto'
+  },
   [ROUTES.SETTINGS]: {
     title: 'Configurações',
     subtitle: 'Configurações do sistema',
@@ -114,6 +120,10 @@ const Header = ({
       // Comportamento padrão baseado na rota
       if (location.pathname === ROUTES.DASHBOARD) {
         navigate(ROUTES.CATEGORIES);
+      } else if (location.pathname === ROUTES.CATEGORIES) {
+        // Já está na página de categorias, não fazer nada
+      } else if (location.pathname === ROUTES.PRODUCTS) {
+        // Já está na página de produtos, não fazer nada
       }
     }
   };
@@ -223,6 +233,10 @@ export const useHeader = () => {
   const navigateToCreate = () => {
     if (location.pathname === ROUTES.DASHBOARD) {
       navigate(ROUTES.CATEGORIES);
+    } else if (location.pathname === ROUTES.CATEGORIES) {
+      // Trigger modal de criação de categoria
+    } else if (location.pathname === ROUTES.PRODUCTS) {
+      // Trigger modal de criação de produto
     }
   };
 
@@ -231,6 +245,7 @@ export const useHeader = () => {
     navigateToCreate,
     isOnDashboard: location.pathname === ROUTES.DASHBOARD,
     isOnCategories: location.pathname === ROUTES.CATEGORIES,
+    isOnProducts: location.pathname === ROUTES.PRODUCTS,
     isOnSettings: location.pathname === ROUTES.SETTINGS
   };
 };
@@ -244,6 +259,13 @@ export const DashboardHeader = ({ onMenuClick, onCreateClick }) => (
 );
 
 export const CategoriesHeader = ({ onMenuClick, onCreateClick }) => (
+  <Header 
+    onMenuClick={onMenuClick}
+    onCreateClick={onCreateClick}
+  />
+);
+
+export const ProductsHeader = ({ onMenuClick, onCreateClick }) => (
   <Header 
     onMenuClick={onMenuClick}
     onCreateClick={onCreateClick}

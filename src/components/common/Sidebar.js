@@ -8,6 +8,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Home, 
   List, 
+  Package,
   Settings, 
   LogOut, 
   Tag,
@@ -32,6 +33,13 @@ const navigationItems = [
     icon: List,
     route: ROUTES.CATEGORIES,
     description: 'Gerenciar categorias'
+  },
+  {
+    id: 'products',
+    label: 'Produtos',
+    icon: Package,
+    route: ROUTES.PRODUCTS,
+    description: 'Gerenciar produtos'
   },
   {
     id: 'settings',
@@ -167,7 +175,26 @@ const Sidebar = ({ isOpen, onClose, className = '' }) => {
 
             {/* Seção adicional futura */}
             <div className="text-xs text-gray-400 px-4 py-2 uppercase tracking-wider font-semibold">
-              Futuras Funcionalidades
+              Estatísticas
+            </div>
+            
+            {/* Mini estatísticas na sidebar */}
+            <div className="px-4 space-y-2">
+              <div className="flex items-center gap-3 p-2 bg-purple-50 rounded-lg">
+                <List className="w-4 h-4 text-purple-600" />
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600">Categorias</p>
+                  <p className="text-sm font-bold text-purple-600">-</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 p-2 bg-blue-50 rounded-lg">
+                <Package className="w-4 h-4 text-blue-600" />
+                <div className="flex-1">
+                  <p className="text-xs text-gray-600">Produtos</p>
+                  <p className="text-sm font-bold text-blue-600">-</p>
+                </div>
+              </div>
             </div>
           </nav>
 

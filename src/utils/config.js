@@ -1,7 +1,7 @@
 /**
  * Configurações Centralizadas do Dashboard
- * Versão: 2.4.08
- * Última atualização: 05/08/2025
+ * Versão: 2.5.02
+ * Última atualização: 06/08/2025
  */
 
 // Configurações do Dashboard
@@ -12,9 +12,9 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.4.08',
-    name: 'Dashboard de Gestão de Categorias',
-    releaseDate: '05/08/2025',
+    version: '2.5.02',
+    name: 'Dashboard de Gestão de Categorias e Produtos',
+    releaseDate: '06/08/2025',
     build: Date.now() // Timestamp do build
   },
   auth: {
@@ -28,6 +28,16 @@ export const config = {
       create: '/categorias', 
       update: '/categorias',
       delete: '/categorias',
+    },
+    products: {
+      list: '/produtos',
+      create: '/produtos',
+      update: '/produtos',
+      delete: '/produtos',
+      getById: '/produtos',
+      byCategory: '/produtos/categoria',
+      search: '/produtos/search',
+      toggleStatus: '/produtos/status'
     }
   }
 };
