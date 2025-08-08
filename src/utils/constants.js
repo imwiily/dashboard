@@ -1,8 +1,8 @@
 /**
- * Constantes do Sistema
+ * Constantes do Sistema - ATUALIZADO
  * Valores fixos utilizados em toda a aplicação
  * 
- * NOVO: Constantes para tipos de imagem
+ * NOVO: Tipos de produto e constantes para cores
  */
 
 // Tipos de toast/notificação
@@ -24,6 +24,50 @@ export const PRODUCT_STATUS = {
   INACTIVE: false
 };
 
+// NOVO: Tipos de produto
+export const PRODUCT_TYPES = {
+  STATIC: 'STATIC',           // Produto simples, sem variações
+  MULTI_COLOR: 'MULTI_COLOR'  // Produto com múltiplas cores
+};
+
+// NOVO: Labels dos tipos de produto
+export const PRODUCT_TYPE_LABELS = {
+  [PRODUCT_TYPES.STATIC]: 'Produto Simples',
+  [PRODUCT_TYPES.MULTI_COLOR]: 'Produto Multi-Cor'
+};
+
+// NOVO: Cores predefinidas para seleção rápida
+export const PREDEFINED_COLORS = {
+  // Cores básicas
+  'Branco': '#FFFFFF',
+  'Preto': '#000000',
+  'Cinza': '#808080',
+  
+  // Cores primárias
+  'Vermelho': '#FF0000',
+  'Verde': '#00FF00',
+  'Azul': '#0000FF',
+  
+  // Cores secundárias
+  'Amarelo': '#FFFF00',
+  'Magenta': '#FF00FF',
+  'Ciano': '#00FFFF',
+  
+  // Tons de pele/naturais
+  'Bege': '#F5F5DC',
+  'Marrom': '#8B4513',
+  'Rosa': '#FFC0CB',
+  'Dourado': '#FFD700',
+  'Prateado': '#C0C0C0',
+  
+  // Cores modernas
+  'Azul Marinho': '#000080',
+  'Verde Militar': '#556B2F',
+  'Roxo': '#800080',
+  'Laranja': '#FFA500',
+  'Turquesa': '#40E0D0'
+};
+
 // Filtros de status
 export const STATUS_FILTERS = {
   ALL: 'all',
@@ -31,14 +75,14 @@ export const STATUS_FILTERS = {
   INACTIVE: 'inactive'
 };
 
-// NOVO: Tipos de imagem para otimização
+// Tipos de imagem para otimização
 export const IMAGE_TYPES = {
   ICON: 'ICON',           // Ícones pequenos (16x16, 24x24, 32x32)
   MID_DISPLAY: 'MID-DISPLAY', // Resolução média (64x64, 128x128, 256x256)
   DISPLAY: 'DISPLAY'      // Alta resolução (512x512+, original)
 };
 
-// NOVO: Contextos de uso de imagem (para facilitar escolha do tipo)
+// Contextos de uso de imagem
 export const IMAGE_CONTEXTS = {
   // Ícones pequenos
   SIDEBAR_ICON: IMAGE_TYPES.ICON,
@@ -111,7 +155,14 @@ export const MESSAGES = {
     CATEGORY_REQUIRED: 'Categoria é obrigatória',
     PRICE_REQUIRED: 'Preço é obrigatório e deve ser maior que zero',
     IMAGE_REQUIRED: 'Imagem é obrigatória para novos produtos',
-    INVALID_PRICE: 'Preço deve ser um número válido maior que zero'
+    INVALID_PRICE: 'Preço deve ser um número válido maior que zero',
+    // NOVO: Mensagens para produtos multi-cor
+    TYPE_REQUIRED: 'Tipo de produto é obrigatório',
+    COLORS_REQUIRED: 'Pelo menos uma cor é obrigatória para produtos multi-cor',
+    COLOR_NAME_REQUIRED: 'Nome da cor é obrigatório',
+    COLOR_HEX_REQUIRED: 'Código da cor é obrigatório',
+    COLOR_HEX_INVALID: 'Código da cor deve ser um hexadecimal válido',
+    DUPLICATE_COLOR_NAME: 'Já existe uma cor com este nome'
   },
   GENERAL: {
     LOADING: 'Carregando...',
@@ -132,7 +183,11 @@ export const UI_CONFIG = {
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'],
   SIDEBAR_MOBILE_BREAKPOINT: 1024, // lg breakpoint do Tailwind
   CURRENCY_LOCALE: 'pt-BR',
-  CURRENCY_CODE: 'BRL'
+  CURRENCY_CODE: 'BRL',
+  // NOVO: Configurações para cores
+  MAX_COLORS_PER_PRODUCT: 10, // Máximo de cores por produto
+  COLOR_PICKER_SIZE: 40, // Tamanho do seletor de cor em pixels
+  DEFAULT_COLOR: '#000000' // Cor padrão
 };
 
 // Classes CSS padrão (para reutilização)
@@ -141,11 +196,16 @@ export const CSS_CLASSES = {
     PRIMARY: 'bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200',
     SECONDARY: 'border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors',
     DANGER: 'bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors',
-    ICON: 'p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors'
+    ICON: 'p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors',
+    // NOVO: Botão para cores
+    COLOR: 'w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer hover:border-gray-500 transition-colors',
+    COLOR_SELECTED: 'w-8 h-8 rounded-full border-2 border-purple-500 cursor-pointer ring-2 ring-purple-200'
   },
   INPUT: {
     DEFAULT: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent',
-    ERROR: 'w-full px-4 py-3 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent'
+    ERROR: 'w-full px-4 py-3 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent',
+    // NOVO: Input para cor
+    COLOR: 'w-16 h-10 border border-gray-300 rounded cursor-pointer'
   },
   CARD: {
     DEFAULT: 'bg-white rounded-xl border border-gray-200 hover:shadow-lg transition-shadow',
@@ -154,6 +214,11 @@ export const CSS_CLASSES = {
   STATUS: {
     ACTIVE: 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
     INACTIVE: 'px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'
+  },
+  // NOVO: Classes para produtos multi-cor
+  PRODUCT_TYPE: {
+    STATIC: 'px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
+    MULTI_COLOR: 'px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
   }
 };
 
@@ -162,6 +227,9 @@ export const API_ERROR_CODES = {
   CATEGORY_WITH_PRODUCTS: 'C.ITDx0001',
   PRODUCT_INVALID_CATEGORY: 'P.ITDx0001',
   PRODUCT_DUPLICATE_NAME: 'P.ITDx0002',
+  // NOVO: Códigos para produtos multi-cor
+  PRODUCT_INVALID_COLOR: 'P.ITDx0003',
+  PRODUCT_DUPLICATE_COLOR: 'P.ITDx0004',
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,

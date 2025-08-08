@@ -1,9 +1,9 @@
 /**
  * Configurações Centralizadas do Dashboard
- * Versão: 2.5.03
+ * Versão: 2.5.05
  * Última atualização: 06/08/2025
  * 
- * NOVO: Suporte a tipos de imagem (ICON, MID-DISPLAY, DISPLAY)
+ * NOVO: Suporte completo a produtos MULTI_COLOR
  */
 
 // Configurações do Dashboard
@@ -14,7 +14,7 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.5.03',
+    version: '2.5.05',
     name: 'Dashboard de Gestão de Categorias e Produtos',
     releaseDate: '06/08/2025',
     build: Date.now() // Timestamp do build
@@ -42,7 +42,7 @@ export const config = {
       toggleStatus: '/produtos/status'
     }
   },
-  // NOVO: Tipos de imagem
+  // Tipos de imagem
   imageTypes: {
     ICON: 'ICON',           // Para ícones pequenos (ex: categorias na sidebar)
     MID_DISPLAY: 'MID-DISPLAY', // Resolução média (ex: cards, listas)

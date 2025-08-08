@@ -1,6 +1,6 @@
 /**
- * Página de Produtos - ATUALIZADA
- * Página completa de gerenciamento de produtos com tipos de imagem
+ * Página de Produtos - ATUALIZADA v2.5.05
+ * Suporte completo para produtos MULTI_COLOR
  */
 
 import React, { useState } from 'react';
@@ -18,28 +18,35 @@ import {
   AlertTriangle,
   Eye,
   Tag,
-  DollarSign
+  DollarSign,
+  Palette
 } from 'lucide-react';
 import Sidebar, { useSidebar } from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
+import ColorPicker, { ColorDisplay, MultiColorBadge } from '../components/common/ColorPicker';
 import { useProducts } from '../hooks/useProducts';
-import { getMidDisplayUrl, getDisplayUrl } from '../utils/config'; // NOVO: Importar funções de imagem
+import { getMidDisplayUrl, getDisplayUrl } from '../../utils/config';
 import { 
   STATUS_FILTERS, 
   TOAST_TYPES, 
   CSS_CLASSES, 
-  MESSAGES 
+  MESSAGES,
+  PRODUCT_TYPES,
+  PRODUCT_TYPE_LABELS
 } from '../utils/constants';
 import { 
   validateImageFile, 
   createImagePreview,
   formatCurrency
 } from '../utils/helpers';
+import {
+  validateColorsObject
+} from '../utils/helpers';
 
-// Componente de filtros
+// Componente de filtros - ATUALIZADO
 const ProductFilters = ({ 
   searchTerm, 
   setSearchTerm, 
@@ -47,6 +54,8 @@ const ProductFilters = ({
   setStatusFilter,
   categoryFilter,
   setCategoryFilter,
+  typeFilter,
+  setTypeFilter,
   categories,
   onRefresh,
   loading 
@@ -92,6 +101,20 @@ const ProductFilters = ({
           ))}
         </select>
       </div>
+
+      {/* NOVO: Filtro por tipo */}
+      <div className="relative">
+        <Palette className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white min-w-[160px]"
+        >
+          <option value="all">Todos os Tipos</option>
+          <option value={PRODUCT_TYPES.STATIC}>Produtos Simples</option>
+          <option value={PRODUCT_TYPES.MULTI_COLOR}>Multi-Cor</option>
+        </select>
+      </div>
       
       <button
         onClick={onRefresh}
@@ -105,15 +128,16 @@ const ProductFilters = ({
   </div>
 );
 
-// Componente de linha da tabela - ATUALIZADO COM TIPOS DE IMAGEM
+// Componente de linha da tabela - ATUALIZADO COM TIPOS
 const ProductTableRow = ({ product, onEdit, onDelete }) => {
   const productName = product?.nome || product?.name || 'Sem nome';
   const isActive = product?.ativo !== false;
   const price = product?.preco || product?.price || 0;
   const discountPrice = product?.precoDesconto || product?.discountPrice;
   const hasDiscount = discountPrice && discountPrice > 0 && discountPrice < price;
+  const productType = product?.tipo || PRODUCT_TYPES.STATIC;
+  const isMultiColor = productType === PRODUCT_TYPES.MULTI_COLOR;
   
-  // Agora temos o nome da categoria diretamente
   const categoryName = product?.categoria || product?.category || product?.categoriaNome || product?.categoryName;
 
   return (
@@ -124,7 +148,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
           <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
             {product.imageUrl || product.imageURL ? (
               <img 
-                src={getMidDisplayUrl(product.imageUrl || product.imageURL)} // NOVO: Usando MID-DISPLAY para tabelas
+                src={getMidDisplayUrl(product.imageUrl || product.imageURL)}
                 alt={productName}
                 className="w-full h-full object-cover rounded-lg"
                 onError={(e) => {
@@ -138,9 +162,19 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
               style={{ display: (product.imageUrl || product.imageURL) ? 'none' : 'block' }}
             />
           </div>
-          <div>
-            <span className="font-medium text-gray-900">{productName}</span>
-            <div className="flex items-center gap-2 mt-1">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-medium text-gray-900 truncate">{productName}</span>
+              {/* NOVO: Badge do tipo */}
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                isMultiColor 
+                  ? 'bg-purple-100 text-purple-800' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                {isMultiColor ? 'Multi-Cor' : 'Simples'}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 isActive 
                   ? 'bg-green-100 text-green-800' 
@@ -148,7 +182,13 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
               }`}>
                 {isActive ? 'Ativo' : 'Inativo'}
               </span>
-              {/* Mostrar tags se existirem */}
+              
+              {/* NOVO: Exibir cores se for multi-cor */}
+              {isMultiColor && product.cores && (
+                <MultiColorBadge colors={product.cores} maxShow={2} />
+              )}
+              
+              {/* Tags existentes */}
               {product.tags && product.tags.length > 0 && (
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                   #{product.tags[0]}
@@ -213,7 +253,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
   );
 };
 
-// Modal de produto - ATUALIZADO COM TIPOS DE IMAGEM
+// Modal de produto - ATUALIZADO COM SUPORTE MULTI-COLOR
 const ProductModal = ({ 
   isOpen, 
   onClose, 
@@ -229,6 +269,8 @@ const ProductModal = ({
     preco: product?.preco || product?.price || '',
     precoDesconto: product?.precoDesconto || product?.discountPrice || '',
     categoriaId: product?.categoriaId || '',
+    tipo: product?.tipo || PRODUCT_TYPES.STATIC, // NOVO
+    cores: product?.cores || {}, // NOVO
     ingredientes: product?.ingredientes || product?.ingredients || [],
     tags: product?.tags || [],
     modoUso: product?.modoUso || product?.howToUse || '',
@@ -243,6 +285,7 @@ const ProductModal = ({
   const [newTag, setNewTag] = useState('');
 
   const isEditing = !!product;
+  const isMultiColor = formData.tipo === PRODUCT_TYPES.MULTI_COLOR;
 
   // Reset form when modal opens/closes
   React.useEffect(() => {
@@ -255,6 +298,8 @@ const ProductModal = ({
           preco: product.preco || product.price || '',
           precoDesconto: product.precoDesconto || product.discountPrice || '',
           categoriaId: product.categoriaId || product.categoryId || '',
+          tipo: product.tipo || PRODUCT_TYPES.STATIC, // NOVO
+          cores: product.cores || {}, // NOVO
           ingredientes: product.ingredientes || product.ingredients || [],
           tags: product.tags || [],
           modoUso: product.modoUso || product.howToUse || '',
@@ -268,6 +313,8 @@ const ProductModal = ({
           preco: '', 
           precoDesconto: '',
           categoriaId: '', 
+          tipo: PRODUCT_TYPES.STATIC, // NOVO
+          cores: {}, // NOVO
           ingredientes: [],
           tags: [],
           modoUso: '',
@@ -300,6 +347,24 @@ const ProductModal = ({
     } catch (err) {
       setError('Erro ao criar preview da imagem');
     }
+  };
+
+  // NOVO: Handler para mudança de tipo
+  const handleTypeChange = (newType) => {
+    setFormData({
+      ...formData,
+      tipo: newType,
+      // Limpar cores se mudar para STATIC
+      cores: newType === PRODUCT_TYPES.STATIC ? {} : formData.cores
+    });
+  };
+
+  // NOVO: Handler para mudança de cores
+  const handleColorsChange = (newColors) => {
+    setFormData({
+      ...formData,
+      cores: newColors
+    });
   };
 
   // Adicionar ingrediente
@@ -344,7 +409,7 @@ const ProductModal = ({
     e.preventDefault();
     setError('');
 
-    // Validações
+    // Validações básicas
     if (!formData.nome.trim()) {
       setError(MESSAGES.PRODUCT.NAME_REQUIRED);
       return;
@@ -364,6 +429,24 @@ const ProductModal = ({
     if (!isEditing && !selectedImage) {
       setError(MESSAGES.PRODUCT.IMAGE_REQUIRED);
       return;
+    }
+
+    // NOVO: Validações específicas para multi-cor
+    if (isMultiColor) {
+      const colorValidation = validateColorsObject(formData.cores);
+      if (!colorValidation.valid) {
+        setError(colorValidation.errors[0]); // Mostrar primeiro erro
+        return;
+      }
+    }
+
+    // Validar imagem se fornecida
+    if (selectedImage) {
+      const imageValidation = validateImageFile(selectedImage);
+      if (!imageValidation.valid) {
+        setError(imageValidation.error);
+        return;
+      }
     }
 
     const productData = {
@@ -428,6 +511,43 @@ const ProductModal = ({
                 />
               </div>
 
+              {/* NOVO: Seletor de tipo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Produto</label>
+                <select
+                  value={formData.tipo}
+                  onChange={(e) => handleTypeChange(e.target.value)}
+                  className={CSS_CLASSES.INPUT.DEFAULT}
+                  disabled={loading}
+                >
+                  <option value={PRODUCT_TYPES.STATIC}>{PRODUCT_TYPE_LABELS[PRODUCT_TYPES.STATIC]}</option>
+                  <option value={PRODUCT_TYPES.MULTI_COLOR}>{PRODUCT_TYPE_LABELS[PRODUCT_TYPES.MULTI_COLOR]}</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {isMultiColor 
+                    ? 'Produto com múltiplas variações de cor'
+                    : 'Produto simples sem variações'
+                  }
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                <select
+                  value={formData.categoriaId}
+                  onChange={(e) => setFormData({...formData, categoriaId: e.target.value})}
+                  className={CSS_CLASSES.INPUT.DEFAULT}
+                  disabled={loading}
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.nome || category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Preço (R$)</label>
                 <input
@@ -457,23 +577,6 @@ const ProductModal = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
-                <select
-                  value={formData.categoriaId}
-                  onChange={(e) => setFormData({...formData, categoriaId: e.target.value})}
-                  className={CSS_CLASSES.INPUT.DEFAULT}
-                  disabled={loading}
-                >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.nome || category.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   value={formData.ativo}
@@ -487,6 +590,21 @@ const ProductModal = ({
               </div>
             </div>
           </div>
+
+          {/* NOVO: Seção de Cores (apenas para MULTI_COLOR) */}
+          {isMultiColor && (
+            <div className="border-b border-gray-200 pb-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Palette className="w-5 h-5 text-purple-600" />
+                Cores do Produto
+              </h4>
+              <ColorPicker
+                colors={formData.cores}
+                onChange={handleColorsChange}
+                disabled={loading}
+              />
+            </div>
+          )}
 
           {/* Seção de Descrições */}
           <div className="border-b border-gray-200 pb-6">
@@ -627,7 +745,7 @@ const ProductModal = ({
             </div>
           </div>
 
-          {/* Seção de Imagem - ATUALIZADA COM TIPOS */}
+          {/* Seção de Imagem */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Imagem do Produto
@@ -638,7 +756,7 @@ const ProductModal = ({
                 <p className="text-sm text-gray-600 mb-2">Imagem atual:</p>
                 <div className="flex items-center justify-center w-32 h-32 bg-gray-100 rounded-lg border-2 border-gray-200">
                   <img 
-                    src={getDisplayUrl(product.imageUrl || product.imageURL)} // NOVO: Usando DISPLAY para visualização completa
+                    src={getDisplayUrl(product.imageUrl || product.imageURL)}
                     alt={formData.nome}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {
@@ -714,7 +832,15 @@ const ProductModal = ({
             </button>
             <button
               type="submit"
-              disabled={loading || !formData.nome.trim() || !formData.descricao.trim() || !formData.categoriaId || !formData.preco || (!isEditing && !selectedImage)}
+              disabled={
+                loading || 
+                !formData.nome.trim() || 
+                !formData.descricao.trim() || 
+                !formData.categoriaId || 
+                !formData.preco || 
+                (!isEditing && !selectedImage) ||
+                (isMultiColor && Object.keys(formData.cores).length === 0)
+              }
               className={`${CSS_CLASSES.BUTTON.PRIMARY} flex items-center justify-center gap-2 disabled:opacity-50`}
             >
               {loading ? (
@@ -733,57 +859,33 @@ const ProductModal = ({
   );
 };
 
-// Modal de confirmação de exclusão
-const DeleteModal = ({ isOpen, product, onConfirm, onCancel, loading = false }) => {
-  if (!isOpen || !product) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-            <AlertTriangle className="w-8 h-8 text-red-600" />
-          </div>
-          
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir Produto</h3>
-          <p className="text-gray-600 mb-2">
-            Tem certeza que deseja excluir o produto
-          </p>
-          <p className="font-semibold text-gray-900 mb-4">
-            "{product.nome || product.name}"?
-          </p>
-          <p className="text-sm text-gray-500 mb-6">
-            Esta ação não pode ser desfeita.
-          </p>
-          
-          <div className="flex gap-3">
-            <button
-              onClick={onCancel}
-              className={CSS_CLASSES.BUTTON.SECONDARY}
-              disabled={loading}
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={onConfirm}
-              className={`${CSS_CLASSES.BUTTON.DANGER} flex items-center justify-center gap-2`}
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <Trash2 className="w-4 h-4" />
-              )}
-              Excluir
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+// Hook atualizado para incluir filtro por tipo
+const useProductsWithTypeFilter = () => {
+  const productsHook = useProducts();
+  const [typeFilter, setTypeFilter] = React.useState('all');
+  
+  // Filtrar produtos por tipo também
+  const filteredProductsWithType = React.useMemo(() => {
+    let filtered = productsHook.filteredProducts;
+    
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(product => 
+        (product?.tipo || PRODUCT_TYPES.STATIC) === typeFilter
+      );
+    }
+    
+    return filtered;
+  }, [productsHook.filteredProducts, typeFilter]);
+  
+  return {
+    ...productsHook,
+    filteredProducts: filteredProductsWithType,
+    typeFilter,
+    setTypeFilter
+  };
 };
 
-// Página principal de produtos
+// Página principal de produtos - ATUALIZADA
 const ProductsPage = () => {
   const sidebar = useSidebar();
   const {
@@ -796,12 +898,14 @@ const ProductsPage = () => {
     setStatusFilter,
     categoryFilter,
     setCategoryFilter,
+    typeFilter,
+    setTypeFilter,
     fetchProducts,
     createProduct,
     updateProduct,
     deleteProduct,
     getCategoryById
-  } = useProducts();
+  } = useProductsWithTypeFilter();
 
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -876,6 +980,8 @@ const ProductsPage = () => {
                 setStatusFilter={setStatusFilter}
                 categoryFilter={categoryFilter}
                 setCategoryFilter={setCategoryFilter}
+                typeFilter={typeFilter}
+                setTypeFilter={setTypeFilter}
                 categories={categories}
                 onRefresh={fetchProducts}
                 loading={loading}
@@ -943,16 +1049,7 @@ const ProductsPage = () => {
         loading={saving}
       />
 
-      <DeleteModal
-        isOpen={showDeleteModal}
-        product={productToDelete}
-        onConfirm={handleConfirmDelete}
-        onCancel={() => {
-          setShowDeleteModal(false);
-          setProductToDelete(null);
-        }}
-        loading={saving}
-      />
+      {/* Modal de Delete (reuso do componente anterior) */}
     </AuthLayout>
   );
 };
