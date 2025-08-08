@@ -1,6 +1,8 @@
 /**
- * Serviços de API
+ * Serviços de API - VERSÃO CORRIGIDA
  * Funções centralizadas para comunicação com a API
+ * 
+ * INCLUI: Categorias, Produtos, Subcategorias e Multi-Color
  */
 
 import { config, buildApiUrl } from '../utils/config';
@@ -199,7 +201,127 @@ export const categoryService = {
 };
 
 /**
- * Serviços de Produtos
+ * Serviços de Subcategorias - NOVO
+ */
+export const subcategoryService = {
+  /**
+   * Buscar todas as subcategorias
+   */
+  async fetchAllSubcategories(token) {
+    console.log('📋 Buscando todas as subcategorias...');
+
+    const response = await makeRequest(buildApiUrl(config.endpoints.subcategories.list), {
+      method: 'GET',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+    });
+
+    const data = await response.json();
+    
+    // Normalizar resposta da API
+    let subcategories = [];
+    if (data.success && data.data && Array.isArray(data.data)) {
+      subcategories = data.data;
+    } else if (Array.isArray(data)) {
+      subcategories = data;
+    }
+
+    console.log('✅ Subcategorias carregadas:', subcategories.length);
+    return subcategories;
+  },
+
+  /**
+   * Buscar subcategorias de uma categoria específica
+   */
+  async fetchSubcategoriesByCategory(categoryId, token) {
+    console.log('📋 Buscando subcategorias da categoria:', categoryId);
+
+    const response = await makeRequest(
+      buildApiUrl(`${config.endpoints.subcategories.byCategory}/${categoryId}`),
+      {
+        method: 'GET',
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      }
+    );
+
+    const data = await response.json();
+    
+    // Normalizar resposta da API
+    let subcategories = [];
+    if (data.success && data.data && Array.isArray(data.data)) {
+      subcategories = data.data;
+    } else if (Array.isArray(data)) {
+      subcategories = data;
+    }
+
+    console.log('✅ Subcategorias da categoria carregadas:', subcategories.length);
+    return subcategories;
+  },
+
+  /**
+   * Criar nova subcategoria
+   */
+  async createSubcategory(subcategoryData, token) {
+    console.log('🆕 Criando nova subcategoria...', subcategoryData.name);
+
+    const response = await makeRequest(buildApiUrl(config.endpoints.subcategories.create), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(subcategoryData)
+    });
+
+    const result = await response.json();
+    console.log('✅ Subcategoria criada com sucesso!');
+    return result;
+  },
+
+  /**
+   * Atualizar subcategoria existente
+   */
+  async updateSubcategory(subcategoryData, token) {
+    console.log('✏️ Atualizando subcategoria...', subcategoryData.name);
+
+    const response = await makeRequest(
+      buildApiUrl(`${config.endpoints.subcategories.update}/${subcategoryData.id}`),
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(subcategoryData)
+      }
+    );
+
+    console.log('✅ Subcategoria atualizada com sucesso!');
+    return response.ok ? { success: true } : await response.json();
+  },
+
+  /**
+   * Excluir subcategoria
+   */
+  async deleteSubcategory(subcategoryId, token) {
+    console.log('🗑️ Excluindo subcategoria...', subcategoryId);
+
+    const response = await makeRequest(
+      buildApiUrl(`${config.endpoints.subcategories.delete}/${subcategoryId}`),
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    console.log('✅ Subcategoria excluída com sucesso!');
+    return response.ok;
+  }
+};
+
+/**
+ * Serviços de Produtos - ATUALIZADO COM MULTI-COLOR E SUBCATEGORIAS
  */
 export const productService = {
   /**
@@ -221,33 +343,51 @@ export const productService = {
       products = data.data.content.map(product => ({
         id: product.id,
         nome: product.name,
-        name: product.name, // Mantém ambos para compatibilidade
+        name: product.name,
         slug: product.slug,
         imageUrl: product.imageURL,
         imageURL: product.imageURL,
-        // Nova estrutura de categoria com ID e nome
+        // Categoria
         categoriaId: product.category?.id || null,
         categoryId: product.category?.id || null,
         categoria: product.category?.name || 'Sem categoria',
         category: product.category?.name || 'Sem categoria',
         categoriaNome: product.category?.name || 'Sem categoria',
         categoryName: product.category?.name || 'Sem categoria',
-        categoryObject: product.category, // Mantém o objeto completo
+        categoryObject: product.category,
+        // NOVO: Subcategoria
+        subcategoriaId: product.subCategory?.id || product.sub_categoria || null,
+        subCategoryId: product.subCategory?.id || product.sub_categoria || null,
+        subcategoria: product.subCategory?.name || null,
+        subCategory: product.subCategory?.name || null,
+        subcategoriaNome: product.subCategory?.name || null,
+        subCategoryName: product.subCategory?.name || null,
+        // NOVO: Tipo e cores
+        tipo: product.type || product.tipo || 'STATIC',
+        type: product.type || product.tipo || 'STATIC',
+        cores: product.colors || product.cores || {},
+        colors: product.colors || product.cores || {},
+        // Preços
         preco: product.price,
         price: product.price,
         precoDesconto: product.discountPrice > 0 ? product.discountPrice : null,
         discountPrice: product.discountPrice > 0 ? product.discountPrice : null,
+        // Descrições
         descricao: product.description,
         description: product.description,
         descricaoCompleta: product.completeDescription,
         completeDescription: product.completeDescription,
+        // Arrays
         ingredientes: product.ingredients || [],
         ingredients: product.ingredients || [],
+        tags: product.tags || [],
+        // Modo de uso
         modoUso: product.howToUse,
         howToUse: product.howToUse,
-        tags: product.tags || [],
+        // Status
         ativo: product.active,
         active: product.active,
+        // Datas
         createdAt: product.createAt,
         createAt: product.createAt,
         updatedAt: product.updateAt,
@@ -279,7 +419,7 @@ export const productService = {
 
     const data = await response.json();
     
-    // Normalizar resposta para produto único
+    // Normalizar resposta para produto único (incluir novos campos)
     if (data.success && data.data) {
       const product = data.data;
       const normalized = {
@@ -291,6 +431,12 @@ export const productService = {
         imageURL: product.imageURL,
         categoria: product.category,
         category: product.category,
+        subcategoria: product.subCategory, // NOVO
+        subCategory: product.subCategory, // NOVO
+        tipo: product.type || 'STATIC', // NOVO
+        type: product.type || 'STATIC', // NOVO
+        cores: product.colors || {}, // NOVO
+        colors: product.colors || {}, // NOVO
         preco: product.price,
         price: product.price,
         precoDesconto: product.discountPrice,
@@ -320,7 +466,7 @@ export const productService = {
   },
 
   /**
-   * Criar novo produto
+   * Criar novo produto - ATUALIZADO COM MULTI-COLOR E SUBCATEGORIAS
    */
   async createProduct(productData, imageFile, token) {
     console.log('🆕 Criando novo produto...', productData.nome);
@@ -338,7 +484,10 @@ export const productService = {
       tags: productData.tags || [],
       modoUso: productData.modoUso || '',
       ativo: productData.ativo !== false,
-      categoria: productData.categoriaId
+      categoria: productData.categoria, // API field
+      sub_categoria: productData.sub_categoria || null, // NOVO: API field
+      tipo: productData.tipo || 'STATIC', // NOVO: API field
+      cores: productData.cores || {} // NOVO: API field
     };
     
     // Campo "dados" como Blob com Content-Type application/json
@@ -363,7 +512,7 @@ export const productService = {
   },
 
   /**
-   * Atualizar produto existente
+   * Atualizar produto existente - ATUALIZADO COM MULTI-COLOR E SUBCATEGORIAS
    */
   async updateProduct(productData, imageFile, token) {
     console.log('✏️ Atualizando produto...', productData.nome);
@@ -381,7 +530,10 @@ export const productService = {
       tags: productData.tags || [],
       modoUso: productData.modoUso || '',
       ativo: productData.ativo !== false,
-      categoria: productData.categoriaId
+      categoria: productData.categoria, // API field
+      sub_categoria: productData.sub_categoria || null, // NOVO: API field
+      tipo: productData.tipo || 'STATIC', // NOVO: API field
+      cores: productData.cores || {} // NOVO: API field
     };
     
     // Campo "dados" como Blob com Content-Type application/json
@@ -431,26 +583,50 @@ export const productService = {
 };
 
 /**
- * Função para verificar se erro é de categoria com produtos
+ * Funções utilitárias para verificação de erros
  */
+
+// Categoria
 export const isCategoryWithProductsError = (error) => {
   return error instanceof ApiError && error.code === API_ERROR_CODES.CATEGORY_WITH_PRODUCTS;
 };
 
-/**
- * Função para verificar se erro é de autenticação
- */
+// Subcategoria
+export const isSubcategoryWithProductsError = (error) => {
+  return error instanceof ApiError && error.code === API_ERROR_CODES.SUBCATEGORY_WITH_PRODUCTS;
+};
+
+// Autenticação
 export const isAuthError = (error) => {
   return error instanceof ApiError && 
     (error.status === API_ERROR_CODES.UNAUTHORIZED || error.status === API_ERROR_CODES.FORBIDDEN);
 };
 
-/**
- * Função para verificar se erro é de produto inválido
- */
+// Produto
 export const isProductError = (error) => {
   return error instanceof ApiError && (
     error.code === API_ERROR_CODES.PRODUCT_INVALID_CATEGORY ||
-    error.code === API_ERROR_CODES.PRODUCT_DUPLICATE_NAME
+    error.code === API_ERROR_CODES.PRODUCT_DUPLICATE_NAME ||
+    error.code === API_ERROR_CODES.PRODUCT_INVALID_COLOR ||
+    error.code === API_ERROR_CODES.PRODUCT_DUPLICATE_COLOR
   );
+};
+
+/**
+ * Função para normalizar dados de subcategoria
+ */
+export const normalizeSubcategoryData = (subcategory) => {
+  return {
+    id: subcategory.id,
+    name: subcategory.name || subcategory.nome,
+    nome: subcategory.name || subcategory.nome,
+    categoryId: subcategory.categoryId || subcategory.categoria_id,
+    categoria_id: subcategory.categoryId || subcategory.categoria_id,
+    categoryName: subcategory.categoryName || subcategory.categoria_nome,
+    categoria_nome: subcategory.categoryName || subcategory.categoria_nome,
+    createdAt: subcategory.createdAt || subcategory.created_at,
+    created_at: subcategory.createdAt || subcategory.created_at,
+    updatedAt: subcategory.updatedAt || subcategory.updated_at,
+    updated_at: subcategory.updatedAt || subcategory.updated_at
+  };
 };

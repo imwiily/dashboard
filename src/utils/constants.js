@@ -2,7 +2,7 @@
  * Constantes do Sistema - ATUALIZADO
  * Valores fixos utilizados em toda a aplicação
  * 
- * NOVO: Tipos de produto e constantes para cores
+ * NOVO: Constantes para subcategorias
  */
 
 // Tipos de toast/notificação
@@ -24,19 +24,19 @@ export const PRODUCT_STATUS = {
   INACTIVE: false
 };
 
-// NOVO: Tipos de produto
+// Tipos de produto
 export const PRODUCT_TYPES = {
   STATIC: 'STATIC',           // Produto simples, sem variações
   MULTI_COLOR: 'MULTI_COLOR'  // Produto com múltiplas cores
 };
 
-// NOVO: Labels dos tipos de produto
+// Labels dos tipos de produto
 export const PRODUCT_TYPE_LABELS = {
   [PRODUCT_TYPES.STATIC]: 'Produto Simples',
   [PRODUCT_TYPES.MULTI_COLOR]: 'Produto Multi-Cor'
 };
 
-// NOVO: Cores predefinidas para seleção rápida
+// Cores predefinidas para seleção rápida
 export const PREDEFINED_COLORS = {
   // Cores básicas
   'Branco': '#FFFFFF',
@@ -142,6 +142,19 @@ export const MESSAGES = {
     DESCRIPTION_REQUIRED: 'Descrição da categoria é obrigatória',
     IMAGE_REQUIRED: 'Imagem é obrigatória para novas categorias'
   },
+  // NOVO: Mensagens para subcategorias
+  SUBCATEGORY: {
+    CREATE_SUCCESS: 'Subcategoria criada com sucesso!',
+    UPDATE_SUCCESS: 'Subcategoria atualizada com sucesso!',
+    DELETE_SUCCESS: 'Subcategoria excluída com sucesso!',
+    CREATE_ERROR: 'Erro ao criar subcategoria',
+    UPDATE_ERROR: 'Erro ao atualizar subcategoria',
+    DELETE_ERROR: 'Erro ao excluir subcategoria',
+    LOAD_ERROR: 'Erro ao carregar subcategorias',
+    DELETE_WITH_PRODUCTS: 'Não é possível excluir esta subcategoria porque existem produtos cadastrados nela. Remova ou transfira os produtos primeiro.',
+    NAME_REQUIRED: 'Nome da subcategoria é obrigatório',
+    CATEGORY_REQUIRED: 'Categoria é obrigatória'
+  },
   PRODUCT: {
     CREATE_SUCCESS: 'Produto criado com sucesso!',
     UPDATE_SUCCESS: 'Produto atualizado com sucesso!',
@@ -156,7 +169,7 @@ export const MESSAGES = {
     PRICE_REQUIRED: 'Preço é obrigatório e deve ser maior que zero',
     IMAGE_REQUIRED: 'Imagem é obrigatória para novos produtos',
     INVALID_PRICE: 'Preço deve ser um número válido maior que zero',
-    // NOVO: Mensagens para produtos multi-cor
+    // Mensagens para produtos multi-cor
     TYPE_REQUIRED: 'Tipo de produto é obrigatório',
     COLORS_REQUIRED: 'Pelo menos uma cor é obrigatória para produtos multi-cor',
     COLOR_NAME_REQUIRED: 'Nome da cor é obrigatório',
@@ -184,10 +197,13 @@ export const UI_CONFIG = {
   SIDEBAR_MOBILE_BREAKPOINT: 1024, // lg breakpoint do Tailwind
   CURRENCY_LOCALE: 'pt-BR',
   CURRENCY_CODE: 'BRL',
-  // NOVO: Configurações para cores
+  // Configurações para cores
   MAX_COLORS_PER_PRODUCT: 10, // Máximo de cores por produto
   COLOR_PICKER_SIZE: 40, // Tamanho do seletor de cor em pixels
-  DEFAULT_COLOR: '#000000' // Cor padrão
+  DEFAULT_COLOR: '#000000', // Cor padrão
+  // NOVO: Configurações para subcategorias
+  MAX_SUBCATEGORIES_PER_CATEGORY: 50, // Máximo de subcategorias por categoria
+  SUBCATEGORY_NAME_MAX_LENGTH: 100 // Máximo de caracteres no nome
 };
 
 // Classes CSS padrão (para reutilização)
@@ -197,14 +213,14 @@ export const CSS_CLASSES = {
     SECONDARY: 'border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition-colors',
     DANGER: 'bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors',
     ICON: 'p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors',
-    // NOVO: Botão para cores
+    // Botão para cores
     COLOR: 'w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer hover:border-gray-500 transition-colors',
     COLOR_SELECTED: 'w-8 h-8 rounded-full border-2 border-purple-500 cursor-pointer ring-2 ring-purple-200'
   },
   INPUT: {
     DEFAULT: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent',
     ERROR: 'w-full px-4 py-3 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent',
-    // NOVO: Input para cor
+    // Input para cor
     COLOR: 'w-16 h-10 border border-gray-300 rounded cursor-pointer'
   },
   CARD: {
@@ -215,10 +231,16 @@ export const CSS_CLASSES = {
     ACTIVE: 'px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800',
     INACTIVE: 'px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800'
   },
-  // NOVO: Classes para produtos multi-cor
+  // Classes para produtos multi-cor
   PRODUCT_TYPE: {
     STATIC: 'px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800',
     MULTI_COLOR: 'px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800'
+  },
+  // NOVO: Classes para subcategorias
+  SUBCATEGORY: {
+    ITEM: 'flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors',
+    SELECTED: 'flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded-lg ring-1 ring-purple-500',
+    BADGE: 'px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800'
   }
 };
 
@@ -227,9 +249,13 @@ export const API_ERROR_CODES = {
   CATEGORY_WITH_PRODUCTS: 'C.ITDx0001',
   PRODUCT_INVALID_CATEGORY: 'P.ITDx0001',
   PRODUCT_DUPLICATE_NAME: 'P.ITDx0002',
-  // NOVO: Códigos para produtos multi-cor
+  // Códigos para produtos multi-cor
   PRODUCT_INVALID_COLOR: 'P.ITDx0003',
   PRODUCT_DUPLICATE_COLOR: 'P.ITDx0004',
+  // NOVO: Códigos para subcategorias
+  SUBCATEGORY_WITH_PRODUCTS: 'S.ITDx0001',
+  SUBCATEGORY_DUPLICATE_NAME: 'S.ITDx0002',
+  SUBCATEGORY_INVALID_CATEGORY: 'S.ITDx0003',
   UNAUTHORIZED: 401,
   FORBIDDEN: 403,
   NOT_FOUND: 404,

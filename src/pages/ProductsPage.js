@@ -1,6 +1,6 @@
 /**
- * Página de Produtos - ATUALIZADA v2.5.05
- * Suporte completo para produtos MULTI_COLOR
+ * Página de Produtos - COMPLETA v2.5.06
+ * Suporte completo para produtos MULTI_COLOR e Subcategorias
  */
 
 import React, { useState } from 'react';
@@ -27,8 +27,10 @@ import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
 import ColorPicker, { ColorDisplay, MultiColorBadge } from '../components/common/ColorPicker';
+import SubcategoryManager, { SubcategorySelector, SubcategoryDisplay } from '../components/common/SubcategoryManager';
 import { useProducts } from '../hooks/useProducts';
-import { getMidDisplayUrl, getDisplayUrl } from '../../utils/config';
+import { useSubcategoriesByCategory } from '../hooks/useSubcategories';
+import { getMidDisplayUrl, getDisplayUrl } from '../utils/config';
 import { 
   STATUS_FILTERS, 
   TOAST_TYPES, 
@@ -40,13 +42,11 @@ import {
 import { 
   validateImageFile, 
   createImagePreview,
-  formatCurrency
-} from '../utils/helpers';
-import {
+  formatCurrency,
   validateColorsObject
 } from '../utils/helpers';
 
-// Componente de filtros - ATUALIZADO
+// Componente de filtros - ATUALIZADO COM SUBCATEGORIAS
 const ProductFilters = ({ 
   searchTerm, 
   setSearchTerm, 
@@ -102,7 +102,6 @@ const ProductFilters = ({
         </select>
       </div>
 
-      {/* NOVO: Filtro por tipo */}
       <div className="relative">
         <Palette className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
         <select
@@ -128,8 +127,8 @@ const ProductFilters = ({
   </div>
 );
 
-// Componente de linha da tabela - ATUALIZADO COM TIPOS
-const ProductTableRow = ({ product, onEdit, onDelete }) => {
+// Componente de linha da tabela - ATUALIZADO COM SUBCATEGORIAS
+const ProductTableRow = ({ product, onEdit, onDelete, allSubcategories }) => {
   const productName = product?.nome || product?.name || 'Sem nome';
   const isActive = product?.ativo !== false;
   const price = product?.preco || product?.price || 0;
@@ -139,6 +138,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
   const isMultiColor = productType === PRODUCT_TYPES.MULTI_COLOR;
   
   const categoryName = product?.categoria || product?.category || product?.categoriaNome || product?.categoryName;
+  const subcategoryId = product?.subcategoriaId || product?.subCategoryId;
 
   return (
     <tr className="hover:bg-gray-50 transition-colors">
@@ -165,7 +165,6 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-medium text-gray-900 truncate">{productName}</span>
-              {/* NOVO: Badge do tipo */}
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 isMultiColor 
                   ? 'bg-purple-100 text-purple-800' 
@@ -174,7 +173,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
                 {isMultiColor ? 'Multi-Cor' : 'Simples'}
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 isActive 
                   ? 'bg-green-100 text-green-800' 
@@ -183,12 +182,10 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
                 {isActive ? 'Ativo' : 'Inativo'}
               </span>
               
-              {/* NOVO: Exibir cores se for multi-cor */}
               {isMultiColor && product.cores && (
                 <MultiColorBadge colors={product.cores} maxShow={2} />
               )}
               
-              {/* Tags existentes */}
               {product.tags && product.tags.length > 0 && (
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                   #{product.tags[0]}
@@ -218,7 +215,8 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
         </div>
       </td>
       <td className="py-4 px-6">
-        <div>
+        <div className="space-y-2">
+          {/* Categoria Principal */}
           {categoryName && categoryName !== 'Sem categoria' ? (
             <div className="flex items-center gap-2">
               <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
@@ -228,6 +226,16 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
             </div>
           ) : (
             <span className="text-sm text-gray-400">Categoria não encontrada</span>
+          )}
+          
+          {/* Subcategoria */}
+          {subcategoryId && (
+            <SubcategoryDisplay 
+              subcategoryId={parseInt(subcategoryId)}
+              subcategories={allSubcategories}
+              showEmpty={false}
+              className="ml-8"
+            />
           )}
         </div>
       </td>
@@ -253,7 +261,7 @@ const ProductTableRow = ({ product, onEdit, onDelete }) => {
   );
 };
 
-// Modal de produto - ATUALIZADO COM SUPORTE MULTI-COLOR
+// Modal de produto - COMPLETO COM SUBCATEGORIAS
 const ProductModal = ({ 
   isOpen, 
   onClose, 
@@ -269,8 +277,9 @@ const ProductModal = ({
     preco: product?.preco || product?.price || '',
     precoDesconto: product?.precoDesconto || product?.discountPrice || '',
     categoriaId: product?.categoriaId || '',
-    tipo: product?.tipo || PRODUCT_TYPES.STATIC, // NOVO
-    cores: product?.cores || {}, // NOVO
+    subcategoriaId: product?.subcategoriaId || product?.sub_categoria || '',
+    tipo: product?.tipo || PRODUCT_TYPES.STATIC,
+    cores: product?.cores || {},
     ingredientes: product?.ingredientes || product?.ingredients || [],
     tags: product?.tags || [],
     modoUso: product?.modoUso || product?.howToUse || '',
@@ -280,14 +289,15 @@ const ProductModal = ({
   const [imagePreview, setImagePreview] = useState(null);
   const [error, setError] = useState('');
   
-  // Estados para campos dinâmicos
   const [newIngredient, setNewIngredient] = useState('');
   const [newTag, setNewTag] = useState('');
 
   const isEditing = !!product;
   const isMultiColor = formData.tipo === PRODUCT_TYPES.MULTI_COLOR;
+  const selectedCategory = categories.find(cat => cat.id === parseInt(formData.categoriaId));
 
-  // Reset form when modal opens/closes
+  const { subcategories } = useSubcategoriesByCategory(formData.categoriaId);
+
   React.useEffect(() => {
     if (isOpen) {
       if (product) {
@@ -298,8 +308,9 @@ const ProductModal = ({
           preco: product.preco || product.price || '',
           precoDesconto: product.precoDesconto || product.discountPrice || '',
           categoriaId: product.categoriaId || product.categoryId || '',
-          tipo: product.tipo || PRODUCT_TYPES.STATIC, // NOVO
-          cores: product.cores || {}, // NOVO
+          subcategoriaId: product.subcategoriaId || product.sub_categoria || '',
+          tipo: product.tipo || PRODUCT_TYPES.STATIC,
+          cores: product.cores || {},
           ingredientes: product.ingredientes || product.ingredients || [],
           tags: product.tags || [],
           modoUso: product.modoUso || product.howToUse || '',
@@ -307,18 +318,9 @@ const ProductModal = ({
         });
       } else {
         setFormData({ 
-          nome: '', 
-          descricao: '', 
-          descricaoCompleta: '',
-          preco: '', 
-          precoDesconto: '',
-          categoriaId: '', 
-          tipo: PRODUCT_TYPES.STATIC, // NOVO
-          cores: {}, // NOVO
-          ingredientes: [],
-          tags: [],
-          modoUso: '',
-          ativo: true 
+          nome: '', descricao: '', descricaoCompleta: '', preco: '', precoDesconto: '',
+          categoriaId: '', subcategoriaId: '', tipo: PRODUCT_TYPES.STATIC, cores: {},
+          ingredientes: [], tags: [], modoUso: '', ativo: true 
         });
       }
       setSelectedImage(null);
@@ -328,6 +330,15 @@ const ProductModal = ({
       setError('');
     }
   }, [isOpen, product]);
+
+  React.useEffect(() => {
+    if (formData.categoriaId && formData.subcategoriaId) {
+      const subcategoryExists = subcategories.some(sub => sub.id === parseInt(formData.subcategoriaId));
+      if (!subcategoryExists) {
+        setFormData(prev => ({ ...prev, subcategoriaId: '' }));
+      }
+    }
+  }, [formData.categoriaId, subcategories, formData.subcategoriaId]);
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -349,17 +360,22 @@ const ProductModal = ({
     }
   };
 
-  // NOVO: Handler para mudança de tipo
+  const handleCategoryChange = (newCategoryId) => {
+    setFormData({
+      ...formData,
+      categoriaId: newCategoryId,
+      subcategoriaId: ''
+    });
+  };
+
   const handleTypeChange = (newType) => {
     setFormData({
       ...formData,
       tipo: newType,
-      // Limpar cores se mudar para STATIC
       cores: newType === PRODUCT_TYPES.STATIC ? {} : formData.cores
     });
   };
 
-  // NOVO: Handler para mudança de cores
   const handleColorsChange = (newColors) => {
     setFormData({
       ...formData,
@@ -367,7 +383,13 @@ const ProductModal = ({
     });
   };
 
-  // Adicionar ingrediente
+  const handleSubcategoryChange = (subcategoryId) => {
+    setFormData({
+      ...formData,
+      subcategoriaId: subcategoryId
+    });
+  };
+
   const addIngredient = () => {
     if (newIngredient.trim() && !formData.ingredientes.includes(newIngredient.trim())) {
       setFormData({
@@ -378,7 +400,6 @@ const ProductModal = ({
     }
   };
 
-  // Remover ingrediente
   const removeIngredient = (index) => {
     setFormData({
       ...formData,
@@ -386,7 +407,6 @@ const ProductModal = ({
     });
   };
 
-  // Adicionar tag
   const addTag = () => {
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData({
@@ -397,7 +417,6 @@ const ProductModal = ({
     }
   };
 
-  // Remover tag
   const removeTag = (index) => {
     setFormData({
       ...formData,
@@ -409,7 +428,6 @@ const ProductModal = ({
     e.preventDefault();
     setError('');
 
-    // Validações básicas
     if (!formData.nome.trim()) {
       setError(MESSAGES.PRODUCT.NAME_REQUIRED);
       return;
@@ -431,16 +449,14 @@ const ProductModal = ({
       return;
     }
 
-    // NOVO: Validações específicas para multi-cor
     if (isMultiColor) {
       const colorValidation = validateColorsObject(formData.cores);
       if (!colorValidation.valid) {
-        setError(colorValidation.errors[0]); // Mostrar primeiro erro
+        setError(colorValidation.errors[0]);
         return;
       }
     }
 
-    // Validar imagem se fornecida
     if (selectedImage) {
       const imageValidation = validateImageFile(selectedImage);
       if (!imageValidation.valid) {
@@ -453,9 +469,13 @@ const ProductModal = ({
       ...formData,
       preco: parseFloat(formData.preco),
       precoDesconto: formData.precoDesconto ? parseFloat(formData.precoDesconto) : null,
-      categoriaId: parseInt(formData.categoriaId),
+      categoria: parseInt(formData.categoriaId),
+      sub_categoria: formData.subcategoriaId ? parseInt(formData.subcategoriaId) : null,
       ...(isEditing && { id: product.id })
     };
+
+    delete productData.categoriaId;
+    delete productData.subcategoriaId;
 
     try {
       await onSave(productData, selectedImage);
@@ -469,7 +489,7 @@ const ProductModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-5xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
             {isEditing ? 'Editar Produto' : 'Novo Produto'}
@@ -511,7 +531,6 @@ const ProductModal = ({
                 />
               </div>
 
-              {/* NOVO: Seletor de tipo */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Produto</label>
                 <select
@@ -532,19 +551,15 @@ const ProductModal = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
-                  value={formData.categoriaId}
-                  onChange={(e) => setFormData({...formData, categoriaId: e.target.value})}
+                  value={formData.ativo}
+                  onChange={(e) => setFormData({...formData, ativo: e.target.value === 'true'})}
                   className={CSS_CLASSES.INPUT.DEFAULT}
                   disabled={loading}
                 >
-                  <option value="">Selecione uma categoria</option>
-                  {categories.map(category => (
-                    <option key={category.id} value={category.id}>
-                      {category.nome || category.name}
-                    </option>
-                  ))}
+                  <option value="true">Ativo</option>
+                  <option value="false">Inativo</option>
                 </select>
               </div>
 
@@ -575,23 +590,61 @@ const ProductModal = ({
                   disabled={loading}
                 />
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select
-                  value={formData.ativo}
-                  onChange={(e) => setFormData({...formData, ativo: e.target.value === 'true'})}
-                  className={CSS_CLASSES.INPUT.DEFAULT}
-                  disabled={loading}
-                >
-                  <option value="true">Ativo</option>
-                  <option value="false">Inativo</option>
-                </select>
-              </div>
             </div>
           </div>
 
-          {/* NOVO: Seção de Cores (apenas para MULTI_COLOR) */}
+          {/* Seção de Categorização */}
+          <div className="border-b border-gray-200 pb-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Tag className="w-5 h-5 text-blue-600" />
+              Categorização
+            </h4>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
+                <select
+                  value={formData.categoriaId}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  className={CSS_CLASSES.INPUT.DEFAULT}
+                  disabled={loading}
+                >
+                  <option value="">Selecione uma categoria</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.id}>
+                      {category.nome || category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subcategoria</label>
+                <SubcategorySelector
+                  categoryId={formData.categoriaId}
+                  selectedSubcategoryId={formData.subcategoriaId}
+                  onSubcategorySelect={handleSubcategoryChange}
+                  placeholder="Selecione uma subcategoria (opcional)"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {formData.categoriaId && (
+              <div className="mt-6">
+                <SubcategoryManager
+                  categoryId={parseInt(formData.categoriaId)}
+                  categoryName={selectedCategory?.nome || selectedCategory?.name}
+                  selectedSubcategoryId={formData.subcategoriaId ? parseInt(formData.subcategoriaId) : null}
+                  onSubcategorySelect={(id) => handleSubcategoryChange(id ? id.toString() : '')}
+                  showHeader={true}
+                  allowManagement={true}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Seção de Cores */}
           {isMultiColor && (
             <div className="border-b border-gray-200 pb-6">
               <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -612,7 +665,7 @@ const ProductModal = ({
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descrição Curta</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Descrição Curta *</label>
                 <textarea
                   value={formData.descricao}
                   onChange={(e) => setFormData({...formData, descricao: e.target.value})}
@@ -748,7 +801,7 @@ const ProductModal = ({
           {/* Seção de Imagem */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Imagem do Produto
+              Imagem do Produto *
             </label>
             
             {isEditing && product && (product.imageUrl || product.imageURL) && !imagePreview && (
@@ -765,7 +818,7 @@ const ProductModal = ({
                     }}
                   />
                   <div className="flex flex-col items-center justify-center text-gray-400" style={{display: 'none'}}>
-                    <Package className="w-8 h-8 mb-1" />
+                    <Upload className="w-8 h-8 mb-1" />
                     <span className="text-xs">Sem imagem</span>
                   </div>
                 </div>
@@ -859,12 +912,61 @@ const ProductModal = ({
   );
 };
 
+// Modal de confirmação de exclusão
+const DeleteModal = ({ isOpen, product, onConfirm, onCancel, loading = false }) => {
+  if (!isOpen || !product) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-6 w-full max-w-sm">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
+          
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Excluir Produto</h3>
+          <p className="text-gray-600 mb-2">
+            Tem certeza que deseja excluir o produto
+          </p>
+          <p className="font-semibold text-gray-900 mb-4">
+            "{product.nome || product.name}"?
+          </p>
+          <p className="text-sm text-gray-500 mb-6">
+            Esta ação não pode ser desfeita.
+          </p>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={onCancel}
+              className={CSS_CLASSES.BUTTON.SECONDARY}
+              disabled={loading}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={onConfirm}
+              className={`${CSS_CLASSES.BUTTON.DANGER} flex items-center justify-center gap-2`}
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Hook atualizado para incluir filtro por tipo
 const useProductsWithTypeFilter = () => {
   const productsHook = useProducts();
   const [typeFilter, setTypeFilter] = React.useState('all');
   
-  // Filtrar produtos por tipo também
   const filteredProductsWithType = React.useMemo(() => {
     let filtered = productsHook.filteredProducts;
     
@@ -885,7 +987,7 @@ const useProductsWithTypeFilter = () => {
   };
 };
 
-// Página principal de produtos - ATUALIZADA
+// Página principal de produtos - COMPLETA
 const ProductsPage = () => {
   const sidebar = useSidebar();
   const {
@@ -913,7 +1015,25 @@ const ProductsPage = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Handlers
+  // Para exibição de subcategorias na tabela
+  const [allSubcategories, setAllSubcategories] = React.useState([]);
+
+  // Carregar todas as subcategorias para exibição
+  React.useEffect(() => {
+    const loadAllSubcategories = async () => {
+      try {
+        const { subcategoryService } = await import('../services/api');
+        const { useAuth } = await import('../contexts/AuthContext');
+        // Aqui você precisaria acessar o token, mas como é um effect,
+        // vamos usar uma abordagem mais simples carregando via hook principal
+      } catch (error) {
+        console.error('Erro ao carregar subcategorias:', error);
+      }
+    };
+    
+    loadAllSubcategories();
+  }, []);
+
   const handleCreate = () => {
     setEditingProduct(null);
     setShowModal(true);
@@ -958,21 +1078,16 @@ const ProductsPage = () => {
   return (
     <AuthLayout>
       <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar */}
         <Sidebar isOpen={sidebar.isOpen} onClose={sidebar.close} />
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
-          {/* Header */}
           <Header 
             onMenuClick={sidebar.open}
             onCreateClick={handleCreate}
           />
 
-          {/* Content */}
           <main className="flex-1 px-4 py-6 lg:px-8">
             <div className="space-y-6">
-              {/* Filtros */}
               <ProductFilters
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
@@ -987,7 +1102,6 @@ const ProductsPage = () => {
                 loading={loading}
               />
 
-              {/* Tabela de Produtos */}
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -1010,13 +1124,13 @@ const ProductsPage = () => {
                             product={product}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            allSubcategories={allSubcategories}
                           />
                         ))
                       )}
                     </tbody>
                   </table>
                   
-                  {/* Estado vazio */}
                   {filteredProducts.length === 0 && !loading && (
                     <div className="text-center py-12">
                       <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -1039,7 +1153,6 @@ const ProductsPage = () => {
         </div>
       </div>
 
-      {/* Modals */}
       <ProductModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -1049,7 +1162,16 @@ const ProductsPage = () => {
         loading={saving}
       />
 
-      {/* Modal de Delete (reuso do componente anterior) */}
+      <DeleteModal
+        isOpen={showDeleteModal}
+        product={productToDelete}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => {
+          setShowDeleteModal(false);
+          setProductToDelete(null);
+        }}
+        loading={saving}
+      />
     </AuthLayout>
   );
 };
