@@ -128,7 +128,7 @@ const ProductFilters = ({
 );
 
 // Componente de linha da tabela - ATUALIZADO COM SUBCATEGORIAS
-const ProductTableRow = ({ product, onEdit, onDelete, allSubcategories }) => {
+const ProductTableRow = ({ product, onEdit, onDelete, allSubcategories, categories }) => {
   const productName = product?.nome || product?.name || 'Sem nome';
   const isActive = product?.ativo !== false;
   const price = product?.preco || product?.price || 0;
@@ -137,129 +137,146 @@ const ProductTableRow = ({ product, onEdit, onDelete, allSubcategories }) => {
   const productType = product?.tipo || PRODUCT_TYPES.STATIC;
   const isMultiColor = productType === PRODUCT_TYPES.MULTI_COLOR;
   
-  const categoryName = product?.categoria || product?.category || product?.categoriaNome || product?.categoryName;
+  // CORRIGIDO: Buscar categoria pelo ID usando o array categories
+  const getCategoryName = () => {
+    const categoryId = product?.categoriaId || product?.categoryId;
+    if (!categoryId) return 'Sem categoria';
+    
+    const category = categories.find(cat => cat.id === parseInt(categoryId));
+    return category ? (category.nome || category.name) : 'Categoria não encontrada';
+  };
+
+  const categoryName = getCategoryName();
   const subcategoryId = product?.subcategoriaId || product?.subCategoryId;
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
-      <td className="py-4 px-6 text-gray-600">#{product.id}</td>
-      <td className="py-4 px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            {product.imageUrl || product.imageURL ? (
-              <img 
-                src={getMidDisplayUrl(product.imageUrl || product.imageURL)}
-                alt={productName}
-                className="w-full h-full object-cover rounded-lg"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
+    <>
+      <tr className="hover:bg-gray-50 transition-colors">
+        <td className="py-4 px-6 text-gray-600">#{product.id}</td>
+        <td className="py-4 px-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              {product.imageUrl || product.imageURL ? (
+                <img 
+                  src={getMidDisplayUrl(product.imageUrl || product.imageURL)}
+                  alt={productName}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <Package 
+                className="w-5 h-5 text-white" 
+                style={{ display: (product.imageUrl || product.imageURL) ? 'none' : 'block' }}
               />
-            ) : null}
-            <Package 
-              className="w-5 h-5 text-white" 
-              style={{ display: (product.imageUrl || product.imageURL) ? 'none' : 'block' }}
-            />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="font-medium text-gray-900 truncate">{productName}</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isMultiColor 
-                  ? 'bg-purple-100 text-purple-800' 
-                  : 'bg-blue-100 text-blue-800'
-              }`}>
-                {isMultiColor ? 'Multi-Cor' : 'Simples'}
-              </span>
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {isActive ? 'Ativo' : 'Inativo'}
-              </span>
-              
-              {isMultiColor && product.cores && (
-                <MultiColorBadge colors={product.cores} maxShow={2} />
-              )}
-              
-              {product.tags && product.tags.length > 0 && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                  #{product.tags[0]}
-                  {product.tags.length > 1 && ` +${product.tags.length - 1}`}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium text-gray-900 truncate">{productName}</span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  isMultiColor 
+                    ? 'bg-purple-100 text-purple-800' 
+                    : 'bg-blue-100 text-blue-800'
+                }`}>
+                  {isMultiColor ? 'Multi-Cor' : 'Simples'}
                 </span>
-              )}
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  isActive 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {isActive ? 'Ativo' : 'Inativo'}
+                </span>
+                
+                {isMultiColor && product.cores && (
+                  <MultiColorBadge colors={product.cores} maxShow={2} />
+                )}
+                
+                {product.tags && product.tags.length > 0 && (
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    #{product.tags[0]}
+                    {product.tags.length > 1 && ` +${product.tags.length - 1}`}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </td>
-      <td className="py-4 px-6">
-        <div className="flex flex-col">
-          {hasDiscount ? (
-            <>
-              <span className="font-semibold text-green-600">
-                {formatCurrency(discountPrice)}
-              </span>
-              <span className="text-sm text-gray-500 line-through">
+        </td>
+        <td className="py-4 px-6">
+          <div className="flex flex-col">
+            {hasDiscount ? (
+              <>
+                <span className="font-semibold text-green-600">
+                  {formatCurrency(discountPrice)}
+                </span>
+                <span className="text-sm text-gray-500 line-through">
+                  {formatCurrency(price)}
+                </span>
+              </>
+            ) : (
+              <span className="font-semibold text-gray-900">
                 {formatCurrency(price)}
               </span>
-            </>
-          ) : (
-            <span className="font-semibold text-gray-900">
-              {formatCurrency(price)}
-            </span>
-          )}
-        </div>
-      </td>
-      <td className="py-4 px-6">
-        <div className="space-y-2">
-          {/* Categoria Principal */}
-          {categoryName && categoryName !== 'Sem categoria' ? (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                <Tag className="w-3 h-3 text-white" />
+            )}
+          </div>
+        </td>
+        <td className="py-4 px-6">
+          <div className="space-y-2">
+            {/* Categoria Principal - CORRIGIDO */}
+            {categoryName && categoryName !== 'Sem categoria' ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded flex items-center justify-center">
+                  <Tag className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-sm text-gray-900 font-medium">{categoryName}</span>
               </div>
-              <span className="text-sm text-gray-600">{categoryName}</span>
-            </div>
-          ) : (
-            <span className="text-sm text-gray-400">Categoria não encontrada</span>
-          )}
-          
-          {/* Subcategoria */}
-          {subcategoryId && (
-            <SubcategoryDisplay 
-              subcategoryId={parseInt(subcategoryId)}
-              subcategories={allSubcategories}
-              showEmpty={false}
-              className="ml-8"
-            />
-          )}
-        </div>
-      </td>
-      <td className="py-4 px-6">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => onEdit(product)}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-            title="Editar produto"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onDelete(product)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-            title="Excluir produto"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </td>
-    </tr>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-gray-300 rounded flex items-center justify-center">
+                  <Tag className="w-3 h-3 text-gray-500" />
+                </div>
+                <span className="text-sm text-gray-500">{categoryName}</span>
+              </div>
+            )}
+            
+            {/* Subcategoria */}
+            {subcategoryId && (
+              <SubcategoryDisplay 
+                subcategoryId={parseInt(subcategoryId)}
+                subcategories={allSubcategories}
+                showEmpty={false}
+                className="ml-8"
+              />
+            )}
+          </div>
+        </td>
+        <td className="py-4 px-6">
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => onEdit(product)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              title="Editar produto"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onDelete(product)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Excluir produto"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+    </>
   );
 };
+
 
 // Modal de produto - COMPLETO COM SUBCATEGORIAS
 const ProductModal = ({ 
@@ -1125,6 +1142,7 @@ const ProductsPage = () => {
                             onEdit={handleEdit}
                             onDelete={handleDelete}
                             allSubcategories={allSubcategories}
+                            categories={categories}
                           />
                         ))
                       )}

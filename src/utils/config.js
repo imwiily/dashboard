@@ -1,9 +1,11 @@
 /**
  * Configurações Centralizadas do Dashboard
- * Versão: 2.5.07
+ * Versão: 2.5.09
  * Última atualização: 09/08/2025
  * 
- * CORREÇÃO: Validação de categoria em produtos
+ * CORREÇÕES v2.5.09:
+ * - Nome de categoria na tabela de produtos
+ * - Event handling no ColorPicker
  */
 
 // Configurações do Dashboard
@@ -14,7 +16,7 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.5.08',
+    version: '2.5.09',
     name: 'Dashboard de Gestão de Categorias e Produtos',
     releaseDate: '09/08/2025',
     build: Date.now() // Timestamp do build

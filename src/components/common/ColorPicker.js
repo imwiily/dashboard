@@ -95,8 +95,13 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
   const [colorHex, setColorHex] = useState(UI_CONFIG.DEFAULT_COLOR);
   const [errors, setErrors] = useState([]);
   
+  // CORRIGIDO: Função handleSubmit com prevenção de propagação
   const handleSubmit = (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation(); // NOVO: Impede propagação para o formulário pai
+    }
+    
     setErrors([]);
     
     const validation = validateColor(colorName, colorHex, selectedColors);
@@ -110,10 +115,20 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
     setColorHex(UI_CONFIG.DEFAULT_COLOR);
   };
   
+  // CORRIGIDO: Função para Enter key que não propaga evento
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation(); // NOVO: Impede propagação
+      handleSubmit(e);
+    }
+  };
+  
   const canAdd = colorName.trim() && colorHex && Object.keys(selectedColors).length < UI_CONFIG.MAX_COLORS_PER_PRODUCT;
   
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    // CORRIGIDO: Remover onSubmit do form para evitar conflitos
+    <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -123,6 +138,7 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
             type="text"
             value={colorName}
             onChange={(e) => setColorName(e.target.value)}
+            onKeyPress={handleKeyPress} // CORRIGIDO: Usar função que previne propagação
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
             placeholder="Ex: Azul Royal"
             maxLength={30}
@@ -145,6 +161,7 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
               type="text"
               value={colorHex}
               onChange={(e) => setColorHex(e.target.value)}
+              onKeyPress={handleKeyPress} // CORRIGIDO: Usar função que previne propagação
               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm font-mono"
               placeholder="#FF0000"
               maxLength={7}
@@ -161,8 +178,10 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
         </div>
       )}
       
+      {/* CORRIGIDO: type="button" e onClick direto em vez de submit */}
       <button
-        type="submit"
+        type="button"
+        onClick={handleSubmit}
         disabled={!canAdd}
         className={`
           w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
@@ -181,7 +200,7 @@ const CustomColorForm = ({ onAddColor, selectedColors = {} }) => {
           Máximo de {UI_CONFIG.MAX_COLORS_PER_PRODUCT} cores por produto
         </p>
       )}
-    </form>
+    </div>
   );
 };
 
