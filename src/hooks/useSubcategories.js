@@ -239,18 +239,32 @@ export const useSubcategoriesList = () => {
   };
 };
 
-// Hook para subcategorias de uma categoria específica
+// Hook para subcategorias de uma categoria específica - CORRIGIDO LOOP
 export const useSubcategoriesByCategory = (categoryId) => {
   const [subcategories, setSubcategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastFetch, setLastFetch] = useState({});
   
   const { getToken } = useAuth();
   const toast = useToast();
 
-  const fetchSubcategories = useCallback(async () => {
+  // Cache por categoria - evita loop infinito
+  const shouldFetch = useCallback((catId) => {
+    if (!catId) return false;
+    if (!lastFetch[catId]) return true;
+    const timeDiff = Date.now() - lastFetch[catId];
+    return timeDiff > 30000; // 30 segundos de cache
+  }, [lastFetch]);
+
+  const fetchSubcategories = useCallback(async (force = false) => {
     if (!categoryId) {
       setSubcategories([]);
+      return;
+    }
+
+    if (!force && !shouldFetch(categoryId)) {
+      console.log('📋 Cache válido para categoria, não buscando subcategorias:', categoryId);
       return;
     }
     
@@ -258,9 +272,18 @@ export const useSubcategoriesByCategory = (categoryId) => {
     setError(null);
 
     try {
+      console.log('📋 Buscando subcategorias da categoria:', categoryId);
       const token = getToken();
       const data = await subcategoryService.fetchSubcategoriesByCategory(categoryId, token);
       setSubcategories(data);
+      
+      // Atualizar cache para esta categoria específica
+      setLastFetch(prev => ({
+        ...prev,
+        [categoryId]: Date.now()
+      }));
+      
+      console.log('✅ Subcategorias carregadas para categoria', categoryId, ':', data.length);
     } catch (err) {
       console.error('❌ Erro ao carregar subcategorias:', err);
       const errorMessage = err.message || 'Erro ao carregar subcategorias';
@@ -269,17 +292,22 @@ export const useSubcategoriesByCategory = (categoryId) => {
     } finally {
       setLoading(false);
     }
-  }, [categoryId, getToken, toast]);
+  }, [categoryId, getToken, toast, shouldFetch]);
 
+  // Effect com dependência estável - só categoryId
   useEffect(() => {
-    fetchSubcategories();
-  }, [fetchSubcategories]);
+    if (categoryId) {
+      fetchSubcategories();
+    } else {
+      setSubcategories([]);
+    }
+  }, [categoryId]); // Removido fetchSubcategories da dependência - era isso que causava o loop
 
   return {
     subcategories,
     loading,
     error,
-    refresh: fetchSubcategories,
+    refresh: () => fetchSubcategories(true), // Force refresh
     isEmpty: !loading && subcategories.length === 0
   };
 };

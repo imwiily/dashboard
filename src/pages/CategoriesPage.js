@@ -1,6 +1,6 @@
 /**
- * Página de Categorias - ATUALIZADA
- * Página completa de gerenciamento de categorias com tipos de imagem
+ * Página de Categorias - COMPLETA COM SUBCATEGORIAS
+ * Página completa de gerenciamento de categorias com tipos de imagem e subcategorias
  */
 
 import React, { useState } from 'react';
@@ -17,16 +17,19 @@ import {
   Check,
   AlertTriangle,
   Eye,
-  EyeOff
+  EyeOff,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import Sidebar, { useSidebar } from '../components/common/Sidebar';
 import Header from '../components/common/Header';
 import { AuthLayout } from '../components/common/ProtectedRoute';
 import { CategoryListSkeleton, LoadingWithText } from '../components/common/LoadingSkeleton';
 import { InlineNotification } from '../components/common/Toast';
+import CategorySubcategories, { CompactCategorySubcategories } from '../components/categories/CategorySubcategories';
 import { useCategories } from '../hooks/useCategories';
-import { getMidDisplayUrl, getDisplayUrl } from '../utils/config'; // NOVO: Importar funções de imagem
-import { IMAGE_CONTEXTS } from '../utils/constants'; // NOVO: Importar contextos
+import { getMidDisplayUrl, getDisplayUrl } from '../utils/config';
+import { IMAGE_CONTEXTS } from '../utils/constants';
 import { 
   STATUS_FILTERS, 
   TOAST_TYPES, 
@@ -85,66 +88,98 @@ const CategoryFilters = ({
   </div>
 );
 
-// Componente de linha da tabela - ATUALIZADO COM TIPOS DE IMAGEM
-const CategoryTableRow = ({ category, onEdit, onDelete }) => {
+// Componente de linha da tabela - ATUALIZADO COM SUBCATEGORIAS
+const CategoryTableRow = ({ category, onEdit, onDelete, expandedRows, onToggleExpand }) => {
   const categoryName = category?.nome || category?.name || 'Sem nome';
   const isActive = category?.ativo !== false;
+  const isExpanded = expandedRows.includes(category.id);
 
   return (
-    <tr className="hover:bg-gray-50 transition-colors">
-      <td className="py-4 px-6 text-gray-600">#{category.id}</td>
-      <td className="py-4 px-6">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
-            {category.imageUrl ? (
-              <img 
-                src={getMidDisplayUrl(category.imageUrl)} // NOVO: Usando MID-DISPLAY para tabelas
-                alt={categoryName}
-                className="w-full h-full object-cover rounded-lg"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
+    <>
+      <tr className="hover:bg-gray-50 transition-colors">
+        <td className="py-4 px-6 text-gray-600">#{category.id}</td>
+        <td className="py-4 px-6">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              {category.imageUrl ? (
+                <img 
+                  src={getMidDisplayUrl(category.imageUrl)}
+                  alt={categoryName}
+                  className="w-full h-full object-cover rounded-lg"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <Tag 
+                className="w-4 h-4 text-white" 
+                style={{ display: category.imageUrl ? 'none' : 'block' }}
               />
-            ) : null}
-            <Tag 
-              className="w-4 h-4 text-white" 
-              style={{ display: category.imageUrl ? 'none' : 'block' }}
-            />
-          </div>
-          <div>
-            <span className="font-medium text-gray-900">{categoryName}</span>
-            <div className="flex items-center gap-2 mt-1">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isActive 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {isActive ? 'Ativa' : 'Inativa'}
-              </span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-900">{categoryName}</span>
+                <CompactCategorySubcategories category={category} maxShow={2} />
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  isActive 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {isActive ? 'Ativa' : 'Inativa'}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </td>
-      <td className="py-4 px-6">
-        <div className="flex items-center justify-end gap-2">
-          <button
-            onClick={() => onEdit(category)}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-            title="Editar categoria"
-          >
-            <Edit3 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => onDelete(category)}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-            title="Excluir categoria"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </td>
-    </tr>
+        </td>
+        <td className="py-4 px-6">
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => onToggleExpand(category.id)}
+              className="p-2 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all"
+              title={isExpanded ? "Ocultar subcategorias" : "Mostrar subcategorias"}
+            >
+              {isExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronRight className="w-4 h-4" />
+              )}
+            </button>
+            <button
+              onClick={() => onEdit(category)}
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+              title="Editar categoria"
+            >
+              <Edit3 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onDelete(category)}
+              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+              title="Excluir categoria"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </td>
+      </tr>
+      
+      {/* Linha expandida com subcategorias */}
+      {isExpanded && (
+        <tr>
+          <td colSpan="3" className="py-0 px-6">
+            <div className="pb-4">
+              <CategorySubcategories 
+                category={category} 
+                showInCard={false}
+                className="bg-gray-50 border-l-4 border-purple-400"
+              />
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 };
 
@@ -313,7 +348,7 @@ const CategoryModal = ({
                 <p className="text-sm text-gray-600 mb-2">Imagem atual:</p>
                 <div className="flex items-center justify-center w-32 h-32 bg-gray-100 rounded-lg border-2 border-gray-200">
                   <img 
-                    src={getDisplayUrl(category.imageUrl)} // NOVO: Usando DISPLAY para visualização completa
+                    src={getDisplayUrl(category.imageUrl)}
                     alt={formData.nome}
                     className="w-full h-full object-cover rounded-lg"
                     onError={(e) => {
@@ -458,7 +493,7 @@ const DeleteModal = ({ isOpen, category, onConfirm, onCancel, loading = false })
   );
 };
 
-// Página principal de categorias
+// Página principal de categorias - COMPLETA COM SUBCATEGORIAS
 const CategoriesPage = () => {
   const sidebar = useSidebar();
   const {
@@ -479,6 +514,7 @@ const CategoriesPage = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [expandedRows, setExpandedRows] = useState([]);
 
   // Handlers
   const handleCreate = () => {
@@ -520,6 +556,15 @@ const CategoriesPage = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Handler para expandir/contrair subcategorias
+  const handleToggleExpand = (categoryId) => {
+    setExpandedRows(prev => 
+      prev.includes(categoryId) 
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
   };
 
   return (
@@ -570,6 +615,8 @@ const CategoriesPage = () => {
                             category={category}
                             onEdit={handleEdit}
                             onDelete={handleDelete}
+                            expandedRows={expandedRows}
+                            onToggleExpand={handleToggleExpand}
                           />
                         ))
                       )}
