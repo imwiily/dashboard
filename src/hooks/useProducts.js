@@ -1,5 +1,5 @@
 /**
- * Hook de Gerenciamento de Produtos
+ * Hook de Gerenciamento de Produtos - CORRIGIDO
  * Lógica completa para CRUD de produtos
  */
 
@@ -73,7 +73,7 @@ export const useProducts = () => {
     }
   }, [getToken]);
 
-  // Criar produto
+  // Criar produto - CORRIGIDO
   const createProduct = useCallback(async (productData, imageFile) => {
     console.log('🆕 Criando produto:', productData.nome);
 
@@ -85,7 +85,8 @@ export const useProducts = () => {
       if (!productData.descricao?.trim()) {
         throw new Error(MESSAGES.PRODUCT.DESCRIPTION_REQUIRED);
       }
-      if (!productData.categoriaId) {
+      // CORRIGIDO: Verificar categoria usando o campo correto
+      if (!productData.categoria && !productData.categoriaId) {
         throw new Error(MESSAGES.PRODUCT.CATEGORY_REQUIRED);
       }
       if (!productData.preco || productData.preco <= 0) {
@@ -120,7 +121,7 @@ export const useProducts = () => {
     }
   }, [getToken, toast, fetchProducts]);
 
-  // Atualizar produto
+  // Atualizar produto - CORRIGIDO
   const updateProduct = useCallback(async (productData, imageFile = null) => {
     console.log('✏️ Atualizando produto:', productData.nome);
 
@@ -132,7 +133,8 @@ export const useProducts = () => {
       if (!productData.descricao?.trim()) {
         throw new Error(MESSAGES.PRODUCT.DESCRIPTION_REQUIRED);
       }
-      if (!productData.categoriaId) {
+      // CORRIGIDO: Verificar categoria usando o campo correto
+      if (!productData.categoria && !productData.categoriaId) {
         throw new Error(MESSAGES.PRODUCT.CATEGORY_REQUIRED);
       }
       if (!productData.preco || productData.preco <= 0) {

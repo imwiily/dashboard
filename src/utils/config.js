@@ -1,9 +1,9 @@
 /**
  * Configurações Centralizadas do Dashboard
  * Versão: 2.5.07
- * Última atualização: 06/08/2025
+ * Última atualização: 09/08/2025
  * 
- * NOVO: Endpoints para subcategorias
+ * CORREÇÃO: Validação de categoria em produtos
  */
 
 // Configurações do Dashboard
@@ -14,9 +14,9 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.5.07',
+    version: '2.5.08',
     name: 'Dashboard de Gestão de Categorias e Produtos',
-    releaseDate: '06/08/2025',
+    releaseDate: '09/08/2025',
     build: Date.now() // Timestamp do build
   },
   auth: {
@@ -31,7 +31,7 @@ export const config = {
       update: '/categorias',
       delete: '/categorias',
     },
-    // NOVO: Endpoints de subcategorias
+    // Endpoints de subcategorias
     subcategories: {
       list: '/subcategorias',                    // GET /api/v1/subcategorias
       create: '/subcategorias',                  // POST /api/v1/subcategorias  
