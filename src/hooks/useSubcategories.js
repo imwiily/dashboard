@@ -196,7 +196,7 @@ export const useSubcategories = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [fetchSubcategories]);
 
   return {
     // Estados

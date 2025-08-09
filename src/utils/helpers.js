@@ -3,7 +3,7 @@
  * Helpers para operações comuns do dashboard
  */
 
-import { UI_CONFIG } from './constants';
+import { UI_CONFIG, PREDEFINED_COLORS } from './constants';
 
 // Função para validar se string é vazia ou só espaços
 export const isEmpty = (str) => {
@@ -370,8 +370,6 @@ export const downloadCSV = (data, filename = 'data.csv') => {
  * Utilitários para Cores
  * Funções específicas para trabalhar com cores em produtos multi-cor
  */
-
-import { PREDEFINED_COLORS, UI_CONFIG } from './constants';
 
 /**
  * Validar código hexadecimal de cor

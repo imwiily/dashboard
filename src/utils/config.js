@@ -1,6 +1,6 @@
 /**
  * Configurações Centralizadas do Dashboard
- * Versão: 2.5.06
+ * Versão: 2.5.07
  * Última atualização: 06/08/2025
  * 
  * NOVO: Endpoints para subcategorias
@@ -14,7 +14,7 @@ export const config = {
     timeout: 30000,
   },
   dashboard: {
-    version: '2.5.06',
+    version: '2.5.07',
     name: 'Dashboard de Gestão de Categorias e Produtos',
     releaseDate: '06/08/2025',
     build: Date.now() // Timestamp do build

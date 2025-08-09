@@ -5,9 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, X, Edit3, Trash2, Tag, ChevronDown, ChevronRight } from 'lucide-react';
-import { useSubcategoriesByCategory, useSubcategories } from '../hooks/useSubcategories';
+import { useSubcategoriesByCategory, useSubcategories } from '../../hooks/useSubcategories';
 import { InlineNotification } from './Toast';
-import { TOAST_TYPES, CSS_CLASSES, MESSAGES } from '../utils/constants';
+import { TOAST_TYPES, CSS_CLASSES, MESSAGES } from '../../utils/constants';
 
 // Componente individual de subcategoria
 const SubcategoryItem = ({ 
